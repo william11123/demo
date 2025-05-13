@@ -22,7 +22,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authorizeRequests ->
                 authorizeRequests
-                    .requestMatchers("/public/**", "/login").permitAll() // 公開路徑和登入頁面允許所有人存取
+                    .requestMatchers("/public/**", "/login","/api/users/**").permitAll() // 公開路徑和登入頁面允許所有人存取
                     .anyRequest().authenticated() // 其他所有請求都需要驗證
             )
             .formLogin(formLogin ->
@@ -34,7 +34,8 @@ public class SecurityConfig {
             .logout(logout ->
                 logout
                     .permitAll()
-            );
+            )
+            .csrf(csrf -> csrf.di***REMOVED***ble());
         return http.build();
     }
 
@@ -44,7 +45,7 @@ public class SecurityConfig {
         // 使用者名稱 "user", 密碼 "password" (會被 PasswordEncoder 加密)
         UserDetails user = User.builder()
             .username("user")
-            .password(passwordEncoder().encode("password")) // 密碼必須被加密
+            .password(passwordEncoder().encode("123")) // 密碼必須被加密
             .roles("USER")
             .build();
 
