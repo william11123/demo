@@ -61,6 +61,23 @@ public class UserController {
         userService.deleteUser(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+    // 更新使用者資訊 (PUT - 完整更新)
+    @PutMapping("/{id}")
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
+        Optional<User> updatedUserOptional = userService.updateUser(id, userDetails);
+        return updatedUserOptional
+                .map(user -> new ResponseEntity<>(user, HttpStatus.OK))
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    // 部分更新使用者資訊 (PATCH - 部分更新)
+    @PatchMapping("/{id}")
+    public ResponseEntity<User> patchUser(@PathVariable Long id, @RequestBody User userDetails) {
+        Optional<User> patchedUserOptional = userService.patchUser(id, userDetails);
+        return patchedUserOptional
+                .map(user -> new ResponseEntity<>(user, HttpStatus.OK))
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
 }
 
 // 一個簡單的請求物件範例，用於建立使用者
