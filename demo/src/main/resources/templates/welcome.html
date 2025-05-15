@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>歡迎</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column; /* 讓內容垂直排列 */
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .welcome-container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+            border: none; /* 如果使用 button 標籤，移除預設邊框 */
+            cursor: pointer; /* 讓滑鼠指標顯示為可點擊 */
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-container">
+        <h1>歡迎使用本系統！</h1>
+        <p>點擊下方按鈕前往使用者管理頁面。</p>
+        <a th:href="@{/users.html}" class="button">前往使用者管理</a>
+        <!-- 或者，如果您 users.html 確定在 static 資料夾的根目錄 -->
+        <!-- <a href="/users.html" class="button">前往使用者管理</a> -->
+    </div>
+</body>
+</html>
