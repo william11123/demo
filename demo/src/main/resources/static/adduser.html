@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>新增使用者</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, ***REMOVED***ns-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 350px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        input[type="text"],
+        input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .mes***REMOVED***ge {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>新增使用者</h1>
+        <form id="addUserForm">
+            <div class="form-group">
+                <label for="username">使用者名稱:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">密碼:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">建立使用者</button>
+        </form>
+        <div id="responseMes***REMOVED***ge" class="mes***REMOVED***ge" style="display:none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('addUserForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // 防止表單的預設提交行為 (重新載入頁面)
+
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const responseMes***REMOVED***geDiv = document.getElementById('responseMes***REMOVED***ge');
+
+            const userData = {
+                username: usernameInput.value,
+                password: passwordInput.value
+            };
+
+            responseMes***REMOVED***geDiv.style.display = 'none'; // 隱藏先前的訊息
+
+            try {
+                const response = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                        // 如果您的 API 需要 CSRF token (如果 CSRF 未停用), 您需要在這裡加入
+                        // 'X-CSRF-TOKEN': 'your_csrf_token_value'
+                    },
+                    body: JSON.stringify(userData) // 將 JavaScript 物件轉換為 JSON 字串
+                });
+
+                if (response.ok) { // HTTP 狀態碼在 200-299 之間
+                    const createdUser = await response.json();
+                    responseMes***REMOVED***geDiv.textContent = `使用者 "${createdUser.username}" 建立成功! ID: ${createdUser.id}`;
+                    responseMes***REMOVED***geDiv.className = 'mes***REMOVED***ge success'; // 設定成功樣式
+                    usernameInput.value = ''; // 清空輸入欄位
+                    passwordInput.value = '';
+                } else {
+                    // 嘗試解析錯誤回應 (如果後端有回傳 JSON 格式的錯誤訊息)
+                    let errorMes***REMOVED***ge = `建立使用者失敗。狀態碼: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        if (errorData && errorData.mes***REMOVED***ge) {
+                             errorMes***REMOVED***ge += ` - ${errorData.mes***REMOVED***ge}`;
+                        } else if (typeof errorData === 'string') {
+                            errorMes***REMOVED***ge += ` - ${errorData}`;
+                        }
+                    } catch (e) {
+                        // 如果錯誤回應不是 JSON，或解析失敗
+                        const textError = await response.text(); // 嘗試讀取純文字錯誤
+                        if (textError) {
+                             errorMes***REMOVED***ge += ` - ${textError}`;
+                        }
+                    }
+                    responseMes***REMOVED***geDiv.textContent = errorMes***REMOVED***ge;
+                    responseMes***REMOVED***geDiv.className = 'mes***REMOVED***ge error'; // 設定錯誤樣式
+                }
+            } catch (error) {
+                console.error('請求錯誤:', error);
+                responseMes***REMOVED***geDiv.textContent = '發生網路錯誤或請求無法處理。';
+                responseMes***REMOVED***geDiv.className = 'mes***REMOVED***ge error';
+            }
+            responseMes***REMOVED***geDiv.style.display = 'block'; // 顯示訊息
+        });
+    </script>
+</body>
+</html>
