@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>使用者管理</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>使用者列表</h1>
+    <table id="usersTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>使用者名稱</th>
+                <!-- 您可以根據 User 模型加入更多欄位 -->
+            </tr>
+        </thead>
+        <tbody>
+            <!-- JavaScript 會在這裡填入資料 -->
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchUsers();
+        });
+
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/api/users'); // 呼叫後端 API
+                if (!response.ok) {
+                    throw new Error(`HTTP 錯誤！狀態: ${response.status}`);
+                }
+                const users = await response.json();
+                displayUsers(users);
+            } catch (error) {
+                console.error('無法獲取使用者列表:', error);
+                // 您可以在頁面上顯示錯誤訊息
+            }
+        }
+
+        function displayUsers(users) {
+            const tableBody = document.getElementById('usersTable').getElementsByTagName('tbody')[0];
+            tableBody.innerHTML = ''; // 清空現有內容
+
+            users.forEach(user => {
+                let row = tableBody.insertRow();
+                let cellId = row.insertCell();
+                let cellUsername = row.insertCell();
+
+                cellId.textContent = user.id;
+                cellUsername.textContent = user.username;
+                // 根據需要加入更多儲存格
+            });
+        }
+    </script>
+
+</body>
+</html>
