@@ -6,6 +6,15 @@ import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder; // 假設您有密碼加密器
+import org.springframework.web.multipart.MultipartFile; // 新增：處理檔案上傳
+import org.apache.poi.ss.usermodel.*; // 新增：Apache POI 核心介面 (Workbook, Sheet, Row, Cell, CellType, DataFormatter)
+import org.apache.poi.xssf.usermodel.XSSFWorkbook; // 新增：處理 .xlsx 格式
+import org.apache.poi.hssf.usermodel.HSSFWorkbook; // 新增：處理 .xls 格式
+
+import java.io.IOException; // 新增：處理 IO 例外
+import java.io.InputStream; // 新增：讀取檔案輸入流
+import java.util.ArrayList; // 新增：用於儲存訊息列表
+import java.util.Iterator; // 新增：用於迭代 Excel 行
 import java.util.List;
 import java.util.Optional;
 
@@ -101,5 +110,87 @@ public class UserService {
 
                     return userRepository.save(existingUser);
                 });
+    }
+/**
+     * 從 Excel 檔案匯入使用者。
+     * 假設 Excel 檔案的第一欄是 username，第二欄是 password。
+     * @param file 上傳的 Excel 檔案 (MultipartFile)
+     * @return 包含匯入結果訊息的列表
+     * @throws IOException 如果讀取檔案時發生 IO 錯誤
+     */
+    public List<String> importUsersFromExcel(MultipartFile file) throws IOException {
+        List<String> messages = new ArrayList<>();
+        Workbook workbook = null;
+        InputStream inputStream = file.getInputStream();
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null && originalFilename.toLowerCase().endsWith(".xlsx")) {
+            workbook = new XSSFWorkbook(inputStream); // 處理 .xlsx
+        } else if (originalFilename != null && originalFilename.toLowerCase().endsWith(".xls")) {
+            workbook = new HSSFWorkbook(inputStream); // 處理 .xls
+        } else {
+            messages.add("錯誤：不支援的檔案格式。請上傳 .xls 或 .xlsx 檔案。");
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            return messages;
+        }
+
+        Sheet sheet = workbook.getSheetAt(0); // 假設資料在第一個工作表
+        Iterator<Row> rowIterator = sheet.iterator();
+
+        int rowNumber = 0;
+        // 嘗試跳過標頭列 (如果 Excel 檔案有標頭)
+        if (rowIterator.hasNext()) {
+            rowIterator.next(); // 讀取並忽略第一行 (標頭)
+            rowNumber++;
+        }
+
+        DataFormatter formatter = new DataFormatter(); // 用於將儲存格內容安全地格式化為字串
+
+        while (rowIterator.hasNext()) {
+            Row currentRow = rowIterator.next();
+            rowNumber++;
+
+            // 獲取儲存格，如果儲存格不存在或為空，則返回 null
+            Cell usernameCell = currentRow.getCell(0, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL); // 第一欄 (索引 0)
+            Cell passwordCell = currentRow.getCell(1, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL); // 第二欄 (索引 1)
+
+            String username = null;
+            String rawPassword = null;
+
+            if (usernameCell != null) {
+                username = formatter.formatCellValue(usernameCell).trim();
+            }
+
+            if (passwordCell != null) {
+                rawPassword = formatter.formatCellValue(passwordCell).trim();
+            }
+
+            if (username == null || username.isEmpty() || rawPassword == null || rawPassword.isEmpty()) {
+                messages.add("警告：第 " + rowNumber + " 行資料不完整 (使用者名稱或密碼為空)，已跳過。");
+                continue; // 跳過此行，處理下一行
+            }
+
+            try {
+                // 檢查使用者是否已存在 (選擇性，但建議)
+                if (userRepository.findByUsername(username).isPresent()) {
+                    messages.add("警告：第 " + rowNumber + " 行的使用者 '" + username + "' 已存在，已跳過。");
+                    continue;
+                }
+                // 使用現有的 createUser 方法建立並儲存使用者
+                createUser(username, rawPassword);
+                messages.add("成功：第 " + rowNumber + " 行的使用者 '" + username + "' 已匯入。");
+            } catch (Exception e) {
+                // 在實際應用中，您可能想使用日誌框架記錄錯誤
+                // logger.error("Error importing user {} at row {}: {}", username, rowNumber, e.getMessage());
+                messages.add("錯誤：第 " + rowNumber + " 行的使用者 '" + username + "' 匯入失敗：" + e.getMessage());
+            }
+        }
+
+        workbook.close(); // 關閉工作簿以釋放資源
+        inputStream.close(); // 關閉輸入流
+
+        return messages;
     }
 }
