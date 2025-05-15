@@ -24,6 +24,8 @@ repositories {
 }
 
 dependencies {
+	implementation("org.apache.poi:poi:5.2.5") // 您可以使用最新的穩定版本
+    implementation("org.apache.poi:poi-ooxml:5.2.5") // 對應 poi 的版本
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
