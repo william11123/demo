@@ -1,0 +1,195 @@
+package com.example.demo.service;
+
+import com.example.demo.model.PredictUpload;
+import com.example.demo.repository.PredictUploadRepository;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * PredictUpload 實體的服務層。
+ * 負責處理與 PredictUpload 相關的業務邏輯，例如從 Excel 匯入資料。
+ */
+@Service
+public class PredictUploadService {
+
+    private final PredictUploadRepository predictUploadRepository;
+
+    /**
+     * 建構子，用於注入 PredictUploadRepository。
+     * @param predictUploadRepository PredictUpload 資料的倉儲層介面。
+     */
+    @Autowired
+    public PredictUploadService(PredictUploadRepository predictUploadRepository) {
+        this.predictUploadRepository = predictUploadRepository;
+    }
+
+    /**
+     * 從 Excel 檔案匯入 PredictUpload 資料。
+     * 假設 Excel 檔案的欄位順序為：CustomNo, TaskType, InMonth, Income。
+     * @param file 上傳的 Excel 檔案 (MultipartFile)。
+     * @return 包含匯入結果訊息的列表。
+     * @throws IOException 如果讀取檔案時發生 IO 錯誤。
+     */
+    public List<String> importPredictUploadsFromExcel(MultipartFile file) throws IOException {
+        List<String> mes***REMOVED***ges = new ArrayList<>();
+        Workbook workbook = null;
+        InputStream inputStream = file.getInputStream();
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename != null && originalFilename.toLowerCase().endsWith(".xlsx")) {
+            workbook = new XSSFWorkbook(inputStream); // 處理 .xlsx
+        } else if (originalFilename != null && originalFilename.toLowerCase().endsWith(".xls")) {
+            workbook = new HSSFWorkbook(inputStream); // 處理 .xls
+        } else {
+            mes***REMOVED***ges.add("錯誤：不支援的檔案格式。請上傳 .xls 或 .xlsx 檔案。");
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    // 記錄關閉流時的錯誤 (可選)
+                }
+            }
+            return mes***REMOVED***ges;
+        }
+
+        Sheet sheet = workbook.getSheetAt(0); // 假設資料在第一個工作表
+        Iterator<Row> rowIterator = sheet.iterator();
+
+        int rowNumber = 0;
+        // 嘗試跳過標頭列 (如果 Excel 檔案有標頭)
+        if (rowIterator.hasNext()) {
+            rowIterator.next(); // 讀取並忽略第一行 (標頭)
+            rowNumber++;
+        }
+
+        DataFormatter formatter = new DataFormatter(); // 用於將儲存格內容安全地格式化為字串
+
+        while (rowIterator.hasNext()) {
+            Row currentRow = rowIterator.next();
+            rowNumber++;
+
+            // 獲取儲存格，如果儲存格不存在或為空，則返回 null
+            // 欄位順序：CustomNo (0), TaskType (1), InMonth (2), Income (3)
+            Cell customNoCell = currentRow.getCell(0, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+            Cell taskTypeCell = currentRow.getCell(1, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+            Cell inMonthCell = currentRow.getCell(2, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+            Cell incomeCell = currentRow.getCell(3, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
+
+            String customNo = null;
+            String taskType = null;
+            String inMonth = null;
+            int income = 0; // 預設值，如果 income 欄位為空或格式不正確
+
+            if (customNoCell != null) {
+                customNo = formatter.formatCellValue(customNoCell).trim();
+            }
+            if (taskTypeCell != null) {
+                taskType = formatter.formatCellValue(taskTypeCell).trim();
+            }
+            if (inMonthCell != null) {
+                inMonth = formatter.formatCellValue(inMonthCell).trim();
+            }
+            if (incomeCell != null) {
+                try {
+                    // 嘗試將 income 儲存格的值轉換為整數
+                    // 如果儲存格是數字型別，直接獲取數字值可以避免 DataFormatter 可能帶來的格式問題 (如千分位符號)
+                    if (incomeCell.getCellType() == CellType.NUMERIC) {
+                        income = (int) incomeCell.getNumericCellValue();
+                    } else {
+                        String incomeStr = formatter.formatCellValue(incomeCell).trim();
+                        if (!incomeStr.isEmpty()) {
+                            income = Integer.parseInt(incomeStr);
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行的 Income 欄位格式不正確，將使用預設值 0。原始值: '" + formatter.formatCellValue(incomeCell) + "'");
+                    // 保持 income 為預設值 0
+                }
+            }
+
+            // 基礎驗證：例如 customNo 不應為空
+            if (customNo == null || customNo.isEmpty()) {
+                mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行的 CustomNo 為空，已跳過。");
+                continue; // 跳過此行，處理下一行
+            }
+
+            try {
+                // 檢查記錄是否已存在 (例如，根據 customNo)
+                // 這裡假設 customNo 是唯一的，如果不是，您需要調整判斷邏輯
+                Optional<PredictUpload> existingRecord = predictUploadRepository.findByCustomNo(customNo);
+                if (existingRecord.isPresent()) {
+                    // 如果記錄已存在，您可以選擇更新它或跳過
+                    // 此處範例為跳過
+                    mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行的記錄 (CustomNo: " + customNo + ") 已存在，已跳過。");
+                    continue;
+                }
+
+                PredictUpload newRecord = new PredictUpload();
+                newRecord.setCustomNo(customNo);
+                newRecord.setTaskType(taskType);
+                newRecord.setInMonth(inMonth);
+                newRecord.setIncome(income);
+
+                predictUploadRepository.***REMOVED***ve(newRecord);
+                mes***REMOVED***ges.add("成功：第 " + rowNumber + " 行的記錄 (CustomNo: " + customNo + ") 已匯入。");
+
+            } catch (Exception e) {
+                // 在實際應用中，您可能想使用日誌框架記錄錯誤
+                // logger.error("Error importing record with CustomNo {} at row {}: {}", customNo, rowNumber, e.getMes***REMOVED***ge());
+                mes***REMOVED***ges.add("錯誤：第 " + rowNumber + " 行的記錄 (CustomNo: " + customNo + ") 匯入失敗：" + e.getMes***REMOVED***ge());
+            }
+        }
+
+        try {
+            if (workbook != null) {
+                workbook.close(); // 關閉工作簿以釋放資源
+            }
+        } catch (IOException e) {
+            // 記錄關閉工作簿時的錯誤 (可選)
+        }
+        try {
+            if (inputStream != null) {
+                inputStream.close(); // 關閉輸入流
+            }
+        } catch (IOException e) {
+            // 記錄關閉流時的錯誤 (可選)
+        }
+
+
+        return mes***REMOVED***ges;
+    }
+
+    // 您可以在此處加入 PredictUploadService 的其他方法，例如：
+    // public Optional<PredictUpload> getPredictUploadByCustomNo(String customNo) {
+    //     return predictUploadRepository.findByCustomNo(customNo);
+    // }
+    public Optional<PredictUpload> getPredictUploadByCustomNo(String customNo) {
+         return predictUploadRepository.findByCustomNo(customNo);
+    }
+    public Optional<PredictUpload> getPredictUploadByTaskType(String taskType) {
+         return predictUploadRepository.findByTaskType(taskType);
+    }
+    public Optional<PredictUpload> getPredictUploadByInMonth(String inmonth) {
+         return predictUploadRepository.findByInMonth(inmonth);
+    }
+
+    // public List<PredictUpload> getAllPredictUploads() {
+    //     return predictUploadRepository.findAll();
+    // }
+
+    // public PredictUpload createPredictUpload(PredictUpload predictUpload) {
+    //     // 在這裡可以加入業務邏輯，例如驗證等
+    //     return predictUploadRepository.***REMOVED***ve(predictUpload);
+    // }
+}

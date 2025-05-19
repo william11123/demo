@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PredictUpload 前端</title>
+    <style>
+        body {
+            font-family: Arial, ***REMOVED***ns-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            margin-bottom: 15px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: calc(100% - 20px);
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #mes***REMOVED***ges {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #eee;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            min-height: 50px;
+        }
+        #mes***REMOVED***ges ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #mes***REMOVED***ges li {
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        #mes***REMOVED***ges li:last-child {
+            border-bottom: none;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .warning {
+            color: orange;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PredictUpload 資料管理</h1>
+
+        <section id="excel-upload-section">
+            <h2>從 Excel 匯入 PredictUpload 資料</h2>
+            <div>
+                <label for="excelFile">選擇 Excel 檔案 (.xls 或 .xlsx):</label>
+                <input type="file" id="excelFile" name="excelFile" accept=".xls,.xlsx">
+            </div>
+            <button onclick="uploadExcel()">上傳檔案</button>
+            <div id="uploadMes***REMOVED***gesTitle" style="margin-top: 15px; font-weight: bold; display: none;">匯入結果:</div>
+            <div id="mes***REMOVED***ges">
+                <ul></ul>
+            </div>
+        </section>
+
+        <!-- 
+            您可以為控制器中其他被註解掉的 CRUD 端點在此處加入更多區塊。
+            例如：
+            <section id="create-record-section">
+                <h2>建立新的 PredictUpload 記錄</h2>
+                <p><em>(後端對應的 @PostMapping 端點目前未啟用)</em></p>
+                <label for="customNo">CustomNo:</label>
+                <input type="text" id="customNo" name="customNo"><br>
+                <label for="taskType">TaskType:</label>
+                <input type="text" id="taskType" name="taskType"><br>
+                <label for="inMonth">InMonth:</label>
+                <input type="text" id="inMonth" name="inMonth"><br>
+                <label for="income">Income:</label>
+                <input type="number" id="income" name="income"><br>
+                <button onclick="createRecord()">建立記錄</button>
+                <div id="createResult"></div>
+            </section>
+
+            <section id="get-record-section">
+                <h2>根據 CustomNo 查詢記錄</h2>
+                <p><em>(後端對應的 @GetMapping(\"/customNo/{customNo}\") 端點目前未啟用)</em></p>
+                <label for="searchCustomNo">輸入 CustomNo:</label>
+                <input type="text" id="searchCustomNo" name="searchCustomNo"><br>
+                <button onclick="getRecordByCustomNo()">查詢</button>
+                <div id="getResult"></div>
+            </section>
+
+            <section id="get-all-records-section">
+                <h2>查詢所有記錄</h2>
+                <p><em>(後端對應的 @GetMapping 端點目前未啟用)</em></p>
+                <button onclick="getAllRecords()">查詢全部</button>
+                <div id="getAllResult"></div>
+            </section>
+        -->
+
+    </div>
+
+    <script>
+        const mes***REMOVED***gesDiv = document.getElementById('mes***REMOVED***ges').getElementsByTagName('ul')[0];
+        const uploadMes***REMOVED***gesTitle = document.getElementById('uploadMes***REMOVED***gesTitle');
+
+        async function uploadExcel() {
+            const fileInput = document.getElementById('excelFile');
+            mes***REMOVED***gesDiv.innerHTML = ''; // 清空先前的訊息
+            uploadMes***REMOVED***gesTitle.style.display = 'none';
+
+
+            if (fileInput.files.length === 0) {
+                appendMes***REMOVED***ge('請先選擇一個檔案。', 'error');
+                uploadMes***REMOVED***gesTitle.style.display = 'block';
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file); // 'file' 必須與 @RequestParam("file") 的名稱相符
+
+            try {
+                // 確保您的 Spring Boot 應用程式正在執行，並且此 URL 是可訪問的
+                const response = await fetch('/api/predict-uploads/upload-excel', {
+                    method: 'POST',
+                    body: formData,
+                    // 不需要 'Content-Type': 'multipart/form-data'，瀏覽器會自動設定
+                });
+
+                uploadMes***REMOVED***gesTitle.style.display = 'block';
+                const resultMes***REMOVED***ges = await response.json();
+
+                if (response.ok || response.status === 207) { // 207 Multi-Status
+                    if (Array.isArray(resultMes***REMOVED***ges)) {
+                        resultMes***REMOVED***ges.forEach(msg => {
+                            let type = 'info';
+                            if (msg.startsWith('錯誤')) type = 'error';
+                            else if (msg.startsWith('警告')) type = 'warning';
+                            else if (msg.startsWith('成功')) type = 'success';
+                            appendMes***REMOVED***ge(msg, type);
+                        });
+                    } else {
+                        appendMes***REMOVED***ge('收到的回應格式不正確。', 'error');
+                    }
+                } else {
+                    // 處理其他 HTTP 錯誤狀態
+                    if (resultMes***REMOVED***ges && Array.isArray(resultMes***REMOVED***ges) && resultMes***REMOVED***ges.length > 0) {
+                         resultMes***REMOVED***ges.forEach(msg => appendMes***REMOVED***ge(msg, 'error'));
+                    } else if (resultMes***REMOVED***ges && resultMes***REMOVED***ges.mes***REMOVED***ge) {
+                        appendMes***REMOVED***ge(`上傳失敗: ${resultMes***REMOVED***ges.mes***REMOVED***ge} (狀態碼: ${response.status})`, 'error');
+                    }
+                    else {
+                        appendMes***REMOVED***ge(`上傳失敗，狀態碼: ${response.status}`, 'error');
+                    }
+                }
+            } catch (error) {
+                uploadMes***REMOVED***gesTitle.style.display = 'block';
+                console.error('上傳過程中發生錯誤:', error);
+                appendMes***REMOVED***ge(`客戶端錯誤: ${error.mes***REMOVED***ge}`, 'error');
+            }
+        }
+
+        function appendMes***REMOVED***ge(mes***REMOVED***ge, type = 'info') {
+            const listItem = document.createElement('li');
+            listItem.textContent = mes***REMOVED***ge;
+            listItem.className = type; // 用於 CSS 樣式
+            mes***REMOVED***gesDiv.appendChild(listItem);
+        }
+
+        // --- 以下是為被註解掉的 CRUD 功能預留的 JavaScript 函數 (未完整實作) ---
+        // async function createRecord() {
+        //     const customNo = document.getElementById('customNo').value;
+        //     const taskType = document.getElementById('taskType').value;
+        //     const inMonth = document.getElementById('inMonth').value;
+        //     const income = document.getElementById('income').value;
+        //     const resultDiv = document.getElementById('createResult');
+        //     resultDiv.innerHTML = '<em>(此功能後端未啟用)</em>';
+        //     // 實際的 fetch 呼叫到 POST /api/predict-uploads
+        //     console.log("模擬建立記錄:", { customNo, taskType, inMonth, income });
+        // }
+
+        // async function getRecordByCustomNo() {
+        //     const customNo = document.getElementById('searchCustomNo').value;
+        //     const resultDiv = document.getElementById('getResult');
+        //     resultDiv.innerHTML = '<em>(此功能後端未啟用)</em>';
+        //     // 實際的 fetch 呼叫到 GET /api/predict-uploads/customNo/{customNo}
+        //     console.log("模擬查詢 CustomNo:", customNo);
+        // }
+
+        // async function getAllRecords() {
+        //     const resultDiv = document.getElementById('getAllResult');
+        //     resultDiv.innerHTML = '<em>(此功能後端未啟用)</em>';
+        //     // 實際的 fetch 呼叫到 GET /api/predict-uploads
+        //     console.log("模擬查詢所有記錄");
+        // }
+    </script>
+</body>
+</html>
