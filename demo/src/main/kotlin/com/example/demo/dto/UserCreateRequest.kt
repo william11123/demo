@@ -1,5 +1,10 @@
 package com.example.demo.dto; // 或者您選擇的其他套件，例如 com.example.demo.controller
 
+data class UserCreateRequest(
+    val username: String,
+    val password: String
+)
+/* 
 public class UserCreateRequest {
     private String username;
     private String password;
@@ -30,3 +35,4 @@ public class UserCreateRequest {
         this.password = password;
     }
 }
+*/
