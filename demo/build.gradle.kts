@@ -1,7 +1,9 @@
 plugins {
 	java
-	id("org.springframework.boot") version "3.2.5"
-	id("io.spring.dependency-management") version "1.1.5"
+	id("org.springframework.boot") version "3.4.5"
+	id("io.spring.dependency-management") version "1.1.7"
+	kotlin("jvm") version "1.9.23" // 確保有這行，版本號可能不同
+    kotlin("plugin.spring") version "1.9.23" // 確保有這行，版本號可能不同
 }
 
 group = "com.example"
