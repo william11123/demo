@@ -34,6 +34,14 @@ public class PredictUploadService {
         this.predictUploadRepository = predictUploadRepository;
     }
 
+    public PredictUpload createPredictUpload(String customNo, String taskType, String inMonth, int income) {
+        PredictUpload newPredictUpload = new PredictUpload();
+        newPredictUpload.setCustomNo(customNo);
+        newPredictUpload.setTaskType(taskType); 
+        newPredictUpload.setInMonth(inMonth);
+        newPredictUpload.setIncome(income); 
+        return predictUploadRepository.***REMOVED***ve(newPredictUpload); // 使用 ***REMOVED***ve 方法儲存到資料庫
+    }
     /**
      * 從 Excel 檔案匯入 PredictUpload 資料。
      * 假設 Excel 檔案的欄位順序為：CustomNo, TaskType, InMonth, Income。

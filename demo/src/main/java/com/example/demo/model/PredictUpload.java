@@ -30,7 +30,7 @@ public class PredictUpload {
     private int income;
 
     // Getters and Setters
-
+ 
     public Long getId() {
         return id;
     }

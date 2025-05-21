@@ -3,8 +3,7 @@ package com.example.demo.controller;
 
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
-import com.example.demo.dto.UserCreateRequest; // <--- 新增的 import 語句 (如果放在 dto 套件)
-// 如果 UserCreateRequest.java 和 UserController.java 在同一個套件，則不需要這個 import
+import com.example.demo.dto.UserCreateRequest;// 如果 UserCreateRequest.java 和 UserController.java 在同一個套件，則不需要這個 import
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
