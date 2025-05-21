@@ -92,23 +92,27 @@
             </div>
         </section>
 
-        <!-- 
-            您可以為控制器中其他被註解掉的 CRUD 端點在此處加入更多區塊。
-            例如：
-            <section id="create-record-section">
-                <h2>建立新的 PredictUpload 記錄</h2>
-                <p><em>(後端對應的 @PostMapping 端點目前未啟用)</em></p>
-                <label for="customNo">CustomNo:</label>
-                <input type="text" id="customNo" name="customNo"><br>
-                <label for="taskType">TaskType:</label>
-                <input type="text" id="taskType" name="taskType"><br>
-                <label for="inMonth">InMonth:</label>
-                <input type="text" id="inMonth" name="inMonth"><br>
-                <label for="income">Income:</label>
-                <input type="number" id="income" name="income"><br>
-                <button onclick="createRecord()">建立記錄</button>
-                <div id="createResult"></div>
-            </section>
+        <section id="create-manual-record-section" style="margin-top: 30px;">
+            <h2>手動建立新的 PredictUpload 記錄</h2>
+            <div>
+                <label for="manualCustomNo">CustomNo (必填):</label>
+                <input type="text" id="manualCustomNo" name="manualCustomNo" required>
+            </div>
+            <div>
+                <label for="manualTaskType">TaskType (必填):</label>
+                <input type="text" id="manualTaskType" name="manualTaskType">
+            </div>
+            <div>
+                <label for="manualInMonth">InMonth (必填):</label>
+                <input type="text" id="manualInMonth" name="manualInMonth">
+            </div>
+            <div>
+                <label for="manualIncome">Income (必填):</label>
+                <input type="number" id="manualIncome" name="manualIncome" required>
+            </div>
+            <button onclick="createManualRecord()">建立記錄</button>
+            <div id="manualCreateResult" style="margin-top: 10px;"></div>
+        </section>
 
             <section id="get-record-section">
                 <h2>根據 CustomNo 查詢記錄</h2>
@@ -197,17 +201,83 @@
             messagesDiv.appendChild(listItem);
         }
 
-        // --- 以下是為被註解掉的 CRUD 功能預留的 JavaScript 函數 (未完整實作) ---
-        // async function createRecord() {
-        //     const customNo = document.getElementById('customNo').value;
-        //     const taskType = document.getElementById('taskType').value;
-        //     const inMonth = document.getElementById('inMonth').value;
-        //     const income = document.getElementById('income').value;
-        //     const resultDiv = document.getElementById('createResult');
-        //     resultDiv.innerHTML = '<em>(此功能後端未啟用)</em>';
-        //     // 實際的 fetch 呼叫到 POST /api/predict-uploads
-        //     console.log("模擬建立記錄:", { customNo, taskType, inMonth, income });
-        // }
+        async function createManualRecord() {
+            console.log("createManualRecord function called");
+            const customNo = document.getElementById('manualCustomNo').value;
+            const taskType = document.getElementById('manualTaskType').value;
+            const inMonth = document.getElementById('manualInMonth').value;
+            const income = document.getElementById('manualIncome').value;
+            const resultDiv = document.getElementById('manualCreateResult');
+            resultDiv.innerHTML = ''; // 清空先前的結果
+
+            console.log("CustomNo:", customNo, "TaskType:", taskType, "InMonth:", inMonth, "Income:", income);
+
+            if (!customNo || income === '') {
+                resultDiv.innerHTML = '<span class="error">CustomNo 和 Income 為必填欄位。</span>';
+                console.log("Validation failed: CustomNo or Income is empty");
+                return;
+            }
+
+            const dataToCreate = {
+                customNo: customNo,
+                taskType: taskType || null, // 如果為空字串，傳遞 null
+                inMonth: inMonth || null,   // 如果為空字串，傳遞 null
+                income: parseInt(income)    // 確保 income 是數字
+            };
+
+            console.log("Data to send:", dataToCreate);
+
+            try {
+                const response = await fetch('/api/predict-uploads', { // 端點與控制器中的 @PostMapping 匹配
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dataToCreate),
+                });
+
+                console.log("Response status:", response.status);
+
+                if (response.ok) {
+                    const newRecord = await response.json();
+                    console.log("Record created successfully:", newRecord);
+                    resultDiv.innerHTML = `<span class="success">記錄已成功建立！ ID: ${newRecord.id}, CustomNo: ${newRecord.customNo}</span>`;
+                    // 清空輸入欄位 (可選)
+                    document.getElementById('manualCustomNo').value = '';
+                    document.getElementById('manualTaskType').value = '';
+                    document.getElementById('manualInMonth').value = '';
+                    document.getElementById('manualIncome').value = '';
+                } else {
+                    let errorMessage = `建立記錄失敗，狀態碼: ${response.status}`;
+                    // 先將響應體讀取為文字
+                    const errorText = await response.text();
+                    console.log("Error body from server (raw text):", errorText);
+
+                    if (errorText && errorText.trim() !== '') {
+                        try {
+                            // 嘗試將文字解析為 JSON
+                            const errorBodyJson = JSON.parse(errorText);
+                            if (errorBodyJson && errorBodyJson.message) {
+                                errorMessage += ` - ${errorBodyJson.message}`;
+                            } else {
+                                // 如果是 JSON 但沒有 message 欄位，或者不是預期的結構，直接使用原始文字
+                                errorMessage += ` - ${errorText}`;
+                            }
+                        } catch (jsonError) {
+                            // 如果解析 JSON 失敗，表示它不是 JSON，直接使用原始文字
+                            errorMessage += ` - ${errorText}`;
+                        }
+                    }
+                    // 如果 errorText 為空，則不附加額外訊息
+
+                    resultDiv.innerHTML = `<span class="error">${errorMessage}</span>`;
+                    console.error("Error creating record:", errorMessage);
+                }
+            } catch (error) {
+                console.error('建立記錄過程中發生客戶端錯誤:', error);
+                resultDiv.innerHTML = `<span class="error">客戶端錯誤: ${error.message}</span>`;
+            }
+        }
 
         // async function getRecordByCustomNo() {
         //     const customNo = document.getElementById('searchCustomNo').value;
