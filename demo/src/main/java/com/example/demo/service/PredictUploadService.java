@@ -1,14 +1,19 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.PredictUploadQueryCriteria; // <--- 新增匯入
 import com.example.demo.model.PredictUpload;
 import com.example.demo.repository.PredictUploadRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification; // <--- 新增匯入
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.persistence.criteria.Predicate; // <--- 新增匯入 (JPA Criteria API)
 
+import java.io.ByteArrayInputStream; // <--- 新增匯入
+import java.io.ByteArrayOutputStream; // <--- 新增匯入
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -37,9 +42,9 @@ public class PredictUploadService {
     public PredictUpload createPredictUpload(String customNo, String taskType, String inMonth, int income) {
         PredictUpload newPredictUpload = new PredictUpload();
         newPredictUpload.setCustomNo(customNo);
-        newPredictUpload.setTaskType(taskType); 
+        newPredictUpload.setTaskType(taskType);
         newPredictUpload.setInMonth(inMonth);
-        newPredictUpload.setIncome(income); 
+        newPredictUpload.setIncome(income);
         return predictUploadRepository.save(newPredictUpload); // 使用 save 方法儲存到資料庫
     }
     /**
@@ -178,10 +183,6 @@ public class PredictUploadService {
         return messages;
     }
 
-    // 您可以在此處加入 PredictUploadService 的其他方法，例如：
-    // public Optional<PredictUpload> getPredictUploadByCustomNo(String customNo) {
-    //     return predictUploadRepository.findByCustomNo(customNo);
-    // }
     public Optional<PredictUpload> getPredictUploadByCustomNo(String customNo) {
          return predictUploadRepository.findByCustomNo(customNo);
     }
@@ -192,12 +193,78 @@ public class PredictUploadService {
          return predictUploadRepository.findByInMonth(inmonth);
     }
 
-    // public List<PredictUpload> getAllPredictUploads() {
-    //     return predictUploadRepository.findAll();
-    // }
+    /**
+     * 根據查詢條件查找 PredictUpload 記錄。
+     * @param criteria 查詢條件 DTO。
+     * @return 符合條件的 PredictUpload 記錄列表。
+     */
+    public List<PredictUpload> findPredictUploadsByCriteria(PredictUploadQueryCriteria criteria) {
+        // 使用 Specification 動態構建查詢條件
+        return predictUploadRepository.findAll((Specification<PredictUpload>) (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-    // public PredictUpload createPredictUpload(PredictUpload predictUpload) {
-    //     // 在這裡可以加入業務邏輯，例如驗證等
-    //     return predictUploadRepository.save(predictUpload);
-    // }
+            if (criteria.getCustomNo() != null && !criteria.getCustomNo().isEmpty()) {
+                // 模糊查詢，忽略大小寫
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("customNo")), "%" + criteria.getCustomNo().toLowerCase() + "%"));
+            }
+            if (criteria.getTaskType() != null && !criteria.getTaskType().isEmpty()) {
+                // 精確查詢，忽略大小寫
+                predicates.add(criteriaBuilder.equal(criteriaBuilder.lower(root.get("taskType")), criteria.getTaskType().toLowerCase()));
+            }
+            if (criteria.getInMonth() != null && !criteria.getInMonth().isEmpty()) {
+                // 精確查詢
+                predicates.add(criteriaBuilder.equal(root.get("inMonth"), criteria.getInMonth()));
+            }
+            if (criteria.getMinIncome() != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("income"), criteria.getMinIncome()));
+            }
+            if (criteria.getMaxIncome() != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("income"), criteria.getMaxIncome()));
+            }
+            // 您可以在這裡加入更多基於 criteria 的條件
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        });
+    }
+
+    /**
+     * 將符合查詢條件的 PredictUpload 記錄匯出為 Excel 檔案的位元組流。
+     * @param criteria 查詢條件 DTO。
+     * @return 包含 Excel 檔案內容的 ByteArrayInputStream。
+     * @throws IOException 如果在生成 Excel 過程中發生 IO 錯誤。
+     */
+    public ByteArrayInputStream exportPredictUploadsToExcel(PredictUploadQueryCriteria criteria) throws IOException {
+        List<PredictUpload> recordsToExport = findPredictUploadsByCriteria(criteria);
+
+        String[] columns = {"ID", "CustomNo", "TaskType", "InMonth", "Income"}; // Excel 標頭
+        try (
+            Workbook workbook = new XSSFWorkbook(); // 創建 .xlsx 格式的工作簿
+            ByteArrayOutputStream out = new ByteArrayOutputStream(); // 用於將工作簿內容寫入記憶體
+        ) {
+            Sheet sheet = workbook.createSheet("PredictUploads"); // 創建一個工作表
+
+            // 創建標頭列
+            Row headerRow = sheet.createRow(0);
+            for (int col = 0; col < columns.length; col++) {
+                Cell cell = headerRow.createCell(col);
+                cell.setCellValue(columns[col]);
+                // 您可以在這裡為標頭儲存格添加樣式
+            }
+
+            // 填充資料列
+            int rowIdx = 1;
+            for (PredictUpload record : recordsToExport) {
+                Row row = sheet.createRow(rowIdx++);
+
+                row.createCell(0).setCellValue(record.getId() != null ? record.getId() : -1L); // 處理 ID 可能為 null 的情況
+                row.createCell(1).setCellValue(record.getCustomNo());
+                row.createCell(2).setCellValue(record.getTaskType());
+                row.createCell(3).setCellValue(record.getInMonth());
+                row.createCell(4).setCellValue(record.getIncome());
+            }
+
+            workbook.write(out); // 將工作簿內容寫入 ByteArrayOutputStream
+            return new ByteArrayInputStream(out.toByteArray()); // 將 OutputStream 轉換為 InputStream
+        }
+    }
 }

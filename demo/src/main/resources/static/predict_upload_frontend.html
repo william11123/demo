@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PredictUpload 前端</title>
+    <title>資本資出 前端</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,12 +25,12 @@
             margin-bottom: 8px;
             font-weight: bold;
         }
-        input[type="file"] {
+        input[type="file"], input[type="text"], input[type="number"] {
             margin-bottom: 15px;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            width: calc(100% - 20px);
+            width: calc(100% - 22px); /* Adjusted for padding and border */
         }
         button {
             background-color: #007bff;
@@ -40,11 +40,12 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
+            margin-right: 10px; /* Add some margin between buttons */
         }
         button:hover {
             background-color: #0056b3;
         }
-        #messages {
+        #messages, #exportMessages {
             margin-top: 20px;
             padding: 10px;
             border: 1px solid #eee;
@@ -52,15 +53,15 @@
             border-radius: 4px;
             min-height: 50px;
         }
-        #messages ul {
+        #messages ul, #exportMessages ul {
             list-style-type: none;
             padding: 0;
         }
-        #messages li {
+        #messages li, #exportMessages li {
             padding: 5px 0;
             border-bottom: 1px dashed #eee;
         }
-        #messages li:last-child {
+        #messages li:last-child, #exportMessages li:last-child {
             border-bottom: none;
         }
         .error {
@@ -73,14 +74,29 @@
         .success {
             color: green;
         }
+        .info {
+            color: #31708f; /* Bootstrap info color */
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            width: 120px; /* Adjust as needed */
+            display: inline-block;
+        }
+        .form-group input {
+            width: calc(100% - 150px); /* Adjust based on label width */
+            display: inline-block;
+        }
+
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>PredictUpload 資料管理</h1>
+        <h1>資本資出 資料管理</h1>
 
         <section id="excel-upload-section">
-            <h2>從 Excel 匯入 PredictUpload 資料</h2>
+            <h2>從 Excel 匯入 資本資出 資料</h2>
             <div>
                 <label for="excelFile">選擇 Excel 檔案 (.xls 或 .xlsx):</label>
                 <input type="file" id="excelFile" name="excelFile" accept=".xls,.xlsx">
@@ -93,27 +109,54 @@
         </section>
 
         <section id="create-manual-record-section" style="margin-top: 30px;">
-            <h2>手動建立新的 PredictUpload 記錄</h2>
-            <div>
-                <label for="manualCustomNo">CustomNo (必填):</label>
+            <h2>手動建立新的資本資出記錄</h2>
+            <div class="form-group">
+                <label for="manualCustomNo">CustomNo:</label>
                 <input type="text" id="manualCustomNo" name="manualCustomNo" required>
             </div>
-            <div>
-                <label for="manualTaskType">TaskType (必填):</label>
+            <div class="form-group">
+                <label for="manualTaskType">TaskType:</label>
                 <input type="text" id="manualTaskType" name="manualTaskType">
             </div>
-            <div>
-                <label for="manualInMonth">InMonth (必填):</label>
+            <div class="form-group">
+                <label for="manualInMonth">InMonth:</label>
                 <input type="text" id="manualInMonth" name="manualInMonth">
             </div>
-            <div>
-                <label for="manualIncome">Income (必填):</label>
+            <div class="form-group">
+                <label for="manualIncome">Income:</label>
                 <input type="number" id="manualIncome" name="manualIncome" required>
             </div>
             <button onclick="createManualRecord()">建立記錄</button>
             <div id="manualCreateResult" style="margin-top: 10px;"></div>
         </section>
 
+        <section id="export-excel-section" style="margin-top: 30px;">
+            <h2>根據條件匯出 Excel</h2>
+            <div class="form-group">
+                <label for="exportCustomNo">CustomNo (模糊):</label>
+                <input type="text" id="exportCustomNo" name="exportCustomNo">
+            </div>
+            <div class="form-group">
+                <label for="exportTaskType">TaskType (精確):</label>
+                <input type="text" id="exportTaskType" name="exportTaskType">
+            </div>
+            <div class="form-group">
+                <label for="exportInMonth">InMonth (精確):</label>
+                <input type="text" id="exportInMonth" name="exportInMonth">
+            </div>
+            <div class="form-group">
+                <label for="exportMinIncome">最低 Income:</label>
+                <input type="number" id="exportMinIncome" name="exportMinIncome">
+            </div>
+            <div class="form-group">
+                <label for="exportMaxIncome">最高 Income:</label>
+                <input type="number" id="exportMaxIncome" name="exportMaxIncome">
+            </div>
+            <button onclick="exportToExcel()">匯出 Excel</button>
+            <div id="exportMessages" style="margin-top: 10px;"><ul></ul></div>
+        </section>
+
+            <!--
             <section id="get-record-section">
                 <h2>根據 CustomNo 查詢記錄</h2>
                 <p><em>(後端對應的 @GetMapping(\"/customNo/{customNo}\") 端點目前未啟用)</em></p>
@@ -129,13 +172,15 @@
                 <button onclick="getAllRecords()">查詢全部</button>
                 <div id="getAllResult"></div>
             </section>
-        -->
+            -->
 
     </div>
 
     <script>
         const messagesDiv = document.getElementById('messages').getElementsByTagName('ul')[0];
         const uploadMessagesTitle = document.getElementById('uploadMessagesTitle');
+        const exportMessagesDiv = document.getElementById('exportMessages').getElementsByTagName('ul')[0];
+
 
         async function uploadExcel() {
             const fileInput = document.getElementById('excelFile');
@@ -144,7 +189,7 @@
 
 
             if (fileInput.files.length === 0) {
-                appendMessage('請先選擇一個檔案。', 'error');
+                appendMessage(messagesDiv, '請先選擇一個檔案。', 'error');
                 uploadMessagesTitle.style.display = 'block';
                 return;
             }
@@ -171,34 +216,34 @@
                             if (msg.startsWith('錯誤')) type = 'error';
                             else if (msg.startsWith('警告')) type = 'warning';
                             else if (msg.startsWith('成功')) type = 'success';
-                            appendMessage(msg, type);
+                            appendMessage(messagesDiv, msg, type);
                         });
                     } else {
-                        appendMessage('收到的回應格式不正確。', 'error');
+                        appendMessage(messagesDiv, '收到的回應格式不正確。', 'error');
                     }
                 } else {
                     // 處理其他 HTTP 錯誤狀態
                     if (resultMessages && Array.isArray(resultMessages) && resultMessages.length > 0) {
-                         resultMessages.forEach(msg => appendMessage(msg, 'error'));
+                         resultMessages.forEach(msg => appendMessage(messagesDiv, msg, 'error'));
                     } else if (resultMessages && resultMessages.message) {
-                        appendMessage(`上傳失敗: ${resultMessages.message} (狀態碼: ${response.status})`, 'error');
+                        appendMessage(messagesDiv, `上傳失敗: ${resultMessages.message} (狀態碼: ${response.status})`, 'error');
                     }
                     else {
-                        appendMessage(`上傳失敗，狀態碼: ${response.status}`, 'error');
+                        appendMessage(messagesDiv, `上傳失敗，狀態碼: ${response.status}`, 'error');
                     }
                 }
             } catch (error) {
                 uploadMessagesTitle.style.display = 'block';
                 console.error('上傳過程中發生錯誤:', error);
-                appendMessage(`客戶端錯誤: ${error.message}`, 'error');
+                appendMessage(messagesDiv, `客戶端錯誤: ${error.message}`, 'error');
             }
         }
 
-        function appendMessage(message, type = 'info') {
+        function appendMessage(targetDiv, message, type = 'info') {
             const listItem = document.createElement('li');
             listItem.textContent = message;
             listItem.className = type; // 用於 CSS 樣式
-            messagesDiv.appendChild(listItem);
+            targetDiv.appendChild(listItem);
         }
 
         async function createManualRecord() {
@@ -212,16 +257,25 @@
 
             console.log("CustomNo:", customNo, "TaskType:", taskType, "InMonth:", inMonth, "Income:", income);
 
-            if (!customNo || income === '') {
+            if (!customNo || income === '') { // 確保 CustomNo 和 Income 有值
                 resultDiv.innerHTML = '<span class="error">CustomNo 和 Income 為必填欄位。</span>';
                 console.log("Validation failed: CustomNo or Income is empty");
                 return;
             }
+             if (!taskType) {
+                resultDiv.innerHTML = '<span class="error">TaskType 為必填欄位。</span>';
+                return;
+            }
+            if (!inMonth) {
+                resultDiv.innerHTML = '<span class="error">InMonth 為必填欄位。</span>';
+                return;
+            }
+
 
             const dataToCreate = {
                 customNo: customNo,
-                taskType: taskType || null, // 如果為空字串，傳遞 null
-                inMonth: inMonth || null,   // 如果為空字串，傳遞 null
+                taskType: taskType,
+                inMonth: inMonth,
                 income: parseInt(income)    // 確保 income 是數字
             };
 
@@ -276,6 +330,79 @@
             } catch (error) {
                 console.error('建立記錄過程中發生客戶端錯誤:', error);
                 resultDiv.innerHTML = `<span class="error">客戶端錯誤: ${error.message}</span>`;
+            }
+        }
+
+        async function exportToExcel() {
+            exportMessagesDiv.innerHTML = ''; // 清空先前的匯出訊息
+
+            const customNo = document.getElementById('exportCustomNo').value;
+            const taskType = document.getElementById('exportTaskType').value;
+            const inMonth = document.getElementById('exportInMonth').value;
+            const minIncome = document.getElementById('exportMinIncome').value;
+            const maxIncome = document.getElementById('exportMaxIncome').value;
+
+            const queryParams = new URLSearchParams();
+            if (customNo) queryParams.append('customNo', customNo);
+            if (taskType) queryParams.append('taskType', taskType);
+            if (inMonth) queryParams.append('inMonth', inMonth);
+            if (minIncome) queryParams.append('minIncome', minIncome);
+            if (maxIncome) queryParams.append('maxIncome', maxIncome);
+
+            const queryString = queryParams.toString();
+            const exportUrl = `/api/predict-uploads/export${queryString ? '?' + queryString : ''}`;
+
+            appendMessage(exportMessagesDiv, `準備從以下網址匯出: ${exportUrl}`, 'info');
+
+            try {
+                const response = await fetch(exportUrl, {
+                    method: 'GET',
+                });
+
+                if (response.ok) {
+                    // 獲取檔名
+                    const contentDisposition = response.headers.get('Content-Disposition');
+                    let filename = 'exported_data.xlsx'; // 預設檔名
+                    if (contentDisposition) {
+                        const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+                        if (filenameMatch && filenameMatch.length > 1) {
+                            filename = filenameMatch[1];
+                        }
+                    }
+
+                    const blob = await response.blob(); // 將回應轉換為 Blob
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = filename; // 設定下載的檔名
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove(); // 清理
+                    window.URL.revokeObjectURL(downloadUrl); // 釋放 Blob URL
+                    appendMessage(exportMessagesDiv, `成功觸發下載: ${filename}`, 'success');
+                } else {
+                    // 嘗試讀取錯誤訊息 (如果後端有回傳 JSON 錯誤)
+                    let errorMsg = `匯出失敗，狀態碼: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        if (errorData && errorData.message) {
+                            errorMsg += ` - ${errorData.message}`;
+                        } else if (errorData) {
+                            errorMsg += ` - ${JSON.stringify(errorData)}`;
+                        }
+                    } catch (e) {
+                        // 如果回應不是 JSON，或者解析失敗
+                        const textError = await response.text();
+                        if (textError) {
+                             errorMsg += ` - ${textError}`;
+                        }
+                    }
+                    appendMessage(exportMessagesDiv, errorMsg, 'error');
+                    console.error('匯出錯誤:', errorMsg);
+                }
+            } catch (error) {
+                console.error('匯出過程中發生客戶端錯誤:', error);
+                appendMessage(exportMessagesDiv, `客戶端錯誤: ${error.message}`, 'error');
             }
         }
 
