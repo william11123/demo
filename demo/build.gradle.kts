@@ -4,6 +4,7 @@ plugins {
 	id("io.spring.dependency-management") version "1.1.7"
 	kotlin("jvm") version "1.9.23" // 確保有這行，版本號可能不同
     kotlin("plugin.spring") version "1.9.23" // 確保有這行，版本號可能不同
+	kotlin("plugin.jpa") version "1.9.23"
 }
 
 group = "com.example"

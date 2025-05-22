@@ -1,18 +1,25 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.UserCreatePredictUpload;
+import com.example.demo.dto.PredictUploadQueryCriteria; // <--- 新增匯入
 import com.example.demo.model.PredictUpload;
 //import com.example.demo.model.User;
 import com.example.demo.service.PredictUploadService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource; // <--- 新增匯入
+import org.springframework.http.HttpHeaders; // <--- 新增匯入
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType; // <--- 新增匯入
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream; // <--- 新增匯入
 import java.io.IOException;
+import java.text.SimpleDateFormat; // <--- 新增匯入
+import java.util.Date; // <--- 新增匯入
 import java.util.List;
 
 @RestController
@@ -91,50 +98,49 @@ public class PredictUploadController {
         }
     }
 
+    /**
+     * 根據查詢條件匯出 PredictUpload 資料到 Excel 檔案。
+     * 端點: GET /api/predict-uploads/export
+     * @param criteria 查詢條件，從請求參數中獲取。
+     * @return 包含 Excel 檔案的 ResponseEntity，供瀏覽器下載。
+     */
+    @GetMapping("/export")
+    public ResponseEntity<InputStreamResource> exportPredictUploads(
+            @ModelAttribute PredictUploadQueryCriteria criteria // Spring 會自動將請求參數對應到 DTO 的欄位
+    ) {
+        try {
+            ByteArrayInputStream bis = predictUploadService.exportPredictUploadsToExcel(criteria);
+
+            HttpHeaders headers = new HttpHeaders();
+            // 產生帶有時間戳的檔案名稱
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String filename = "predict_uploads_" + timestamp + ".xlsx";
+            // 設定 Content-Disposition 標頭，使瀏覽器觸發下載
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename);
+
+            return ResponseEntity
+                    .ok()
+                    .headers(headers)
+                    // 設定正確的 Content-Type 以識別 Excel 檔案
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM) // 通用二進位流
+                    // 或者更精確的 .xlsx 類型:
+                    // .contentType(MediaType.valueOf("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                    .body(new InputStreamResource(bis));
+
+        } catch (IOException e) {
+            logger.error("匯出 PredictUpload 資料到 Excel 時發生 IO 錯誤", e);
+            // 可以回傳一個錯誤訊息的 JSON 或一個空的 500 回應
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body(null); // 或者一個錯誤訊息的 DTO
+        } catch (Exception e) {
+            // 捕獲其他可能的未知錯誤
+            logger.error("匯出 PredictUpload 資料時發生未知錯誤", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body(null);
+        }
+    }
+
+
     // --- 以下是一些 PredictUpload 實體可能的其他 CRUD 端點範例 ---
-
-    /**
-     * 建立新的 PredictUpload 記錄。
-     * 端點: POST /api/predict-uploads
-     * @param predictUpload 要建立的 PredictUpload 物件。
-     * @return 建立的 PredictUpload 物件和 HTTP 狀態 201 (Created)。
-     */
-    // @PostMapping
-    // public ResponseEntity<PredictUpload> createPredictUpload(@RequestBody PredictUpload predictUpload) {
-    //     // 假設 PredictUploadService 中有 createPredictUpload 方法
-    //     // PredictUpload newRecord = predictUploadService.createPredictUpload(predictUpload);
-    //     // return new ResponseEntity<>(newRecord, HttpStatus.CREATED);
-    //     // 如果您的 PredictUploadService 沒有此方法，您需要先在服務層實作它
-    //     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build(); // 暫時返回未實作
-    // }
-
-    /**
-     * 根據 customNo 獲取 PredictUpload 記錄。
-     * 端點: GET /api/predict-uploads/customNo/{customNo}
-     * @param customNo 要查詢的 customNo。
-     * @return 找到的 PredictUpload 物件或 HTTP 狀態 404 (Not Found)。
-     */
-    // @GetMapping("/customNo/{customNo}")
-    // public ResponseEntity<PredictUpload> getPredictUploadByCustomNo(@PathVariable String customNo) {
-    //     // 假設 PredictUploadService 中有 getPredictUploadByCustomNo 方法
-    //     // Optional<PredictUpload> recordOptional = predictUploadService.getPredictUploadByCustomNo(customNo);
-    //     // return recordOptional.map(record -> new ResponseEntity<>(record, HttpStatus.OK))
-    //     //                    .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
-    //     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build(); // 暫時返回未實作
-    // }
-
-    /**
-     * 獲取所有 PredictUpload 記錄。
-     * 端點: GET /api/predict-uploads
-     * @return 所有 PredictUpload 記錄的列表。
-     */
-    // @GetMapping
-    // public ResponseEntity<List<PredictUpload>> getAllPredictUploads() {
-    //     // 假設 PredictUploadService 中有 getAllPredictUploads 方法
-    //     // List<PredictUpload> records = predictUploadService.getAllPredictUploads();
-    //     // return new ResponseEntity<>(records, HttpStatus.OK);
-    //     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build(); // 暫時返回未實作
-    // }
-
-    // 您可以根據需要加入 PUT (更新), DELETE (刪除) 等其他端點
+    // ... (保持您現有的被註解掉的 CRUD 方法) ...
 }
