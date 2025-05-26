@@ -2,54 +2,203 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>歡迎</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, ***REMOVED***ns-serif;
-            background-color: #f4f4f4;
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, ***REMOVED***ns-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
             display: flex;
-            flex-direction: column; /* 讓內容垂直排列 */
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
+            overflow: hidden;
+            position: relative;
         }
+
+        /* 動態背景粒子效果 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
         .welcome-container {
-            background-color: #fff;
-            padding: 40px;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 60px 40px;
+            border-radius: 20px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.1),
+                0 0 80px rgba(255, 255, 255, 0.1) inset;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            z-index: 1;
+            animation: slideUp 0.8s ease-out;
         }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
         h1 {
-            color: #333;
-            margin-bottom: 30px;
+            color: #ffffff;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            letter-spacing: -0.5px;
         }
+
+        p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
         .button {
-            background-color: #007bff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 12px 25px;
+            padding: 16px 24px;
             text-decoration: none;
-            border-radius: 5px;
-            font-size: 16px;
-            transition: background-color 0.3s ease;
-            border: none; /* 如果使用 button 標籤，移除預設邊框 */
-            cursor: pointer; /* 讓滑鼠指標顯示為可點擊 */
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
+
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .button:hover::before {
+            left: 100%;
+        }
+
         .button:hover {
-            background-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #7c8cf0 0%, #8a5cb8 100%);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        /* 圖標樣式 */
+        .button::after {
+            content: '→';
+            font-size: 16px;
+            transition: transform 0.3s ease;
+        }
+
+        .button:hover::after {
+            transform: translateX(4px);
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .welcome-container {
+                padding: 40px 30px;
+                margin: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 載入動畫 */
+        .button {
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .button:nth-child(1) { animation-delay: 0.1s; }
+        .button:nth-child(2) { animation-delay: 0.2s; }
+        .button:nth-child(3) { animation-delay: 0.3s; }
+        .button:nth-child(4) { animation-delay: 0.4s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
 <body>
     <div class="welcome-container">
-        <h1>歡迎使用本系統！</h1>
-        <p>點擊下方按鈕前往使用者管理頁面。</p>
-        <a th:href="@{/users.html}" class="button">前往使用者管理</a>
-        <a th:href="@{/adduser.html}" class="button">前往使用者添加</a>
-        <a th:href="@{/predict_upload_frontend.html}" class="button">前往資本支出添加</a>
-        <a th:href="@{/importUsers.html}" class="button">前往使用者添加excel</a>
-        <!-- 或者，如果您 users.html 確定在 static 資料夾的根目錄 -->
-        <!-- <a href="/users.html" class="button">前往使用者管理</a> -->
+        <h1>歡迎使用本系統</h1>
+        <p>選擇下方功能開始您的管理工作</p>
+        
+        <div class="button-grid">
+            <a th:href="@{/users.html}" class="button">使用者管理</a>
+            <a th:href="@{/adduser.html}" class="button">新增使用者</a>
+            <a th:href="@{/predict_upload_frontend.html}" class="button">資本支出管理</a>
+            <a th:href="@{/importUsers.html}" class="button">批量匯入使用者</a>
+        </div>
     </div>
 </body>
 </html>
