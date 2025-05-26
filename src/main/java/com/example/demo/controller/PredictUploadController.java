@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat; // <--- 新增匯入
 import java.util.Date; // <--- 新增匯入
 import java.util.List;
-
+import java.util.Optional; 
 @RestController
 @RequestMapping("/api/predict-uploads") // 所有此控制器的端點都會以 /api/predict-uploads 開頭
 public class PredictUploadController {
@@ -37,12 +37,7 @@ public class PredictUploadController {
     public ResponseEntity<PredictUpload> createManualPredictUpload(@RequestBody UserCreatePredictUpload request) {
         try {
             // 從 DTO 中獲取資料並呼叫服務層方法
-            PredictUpload newPredictUpload = predictUploadService.createPredictUpload(
-                    request.getCustomNo(),
-                    request.getTaskType(), // DTO 中的 taskType 是可選的，如果為 null 會直接傳遞 null
-                    request.getInMonth(),  // DTO 中的 inMonth 是可選的，如果為 null 會直接傳遞 null
-                    request.getIncome()
-            );
+            PredictUpload newPredictUpload = predictUploadService.createPredictUpload(request);
             return new ResponseEntity<>(newPredictUpload, HttpStatus.CREATED);
         } catch (Exception e) {
             // 考慮更細緻的錯誤處理，例如，如果 customNo 已存在，服務層可以拋出特定例外
@@ -53,6 +48,40 @@ public class PredictUploadController {
                                  .body(null); // 或者一個包含錯誤訊息的 DTO
         }
     }
+    /**
+     * 根據查詢條件搜尋記錄 - 新增端點
+     * 端點: GET /api/predict-uploads/search?customNo=ABC&taskType=TypeA&inMonth=2024-01
+     */
+    @GetMapping("/search")
+    public ResponseEntity<List<PredictUpload>> searchPredictUploads(
+            @RequestParam(required = false) String customNo,
+            @RequestParam(required = false) String taskType,
+            @RequestParam(required = false) String inMonth) {
+        try {
+            PredictUploadQueryCriteria criteria = new PredictUploadQueryCriteria(customNo, taskType, inMonth);
+            List<PredictUpload> results = predictUploadService.findPredictUploadsByCriteria(criteria);
+            return ResponseEntity.ok(results);
+        } catch (Exception e) {
+            logger.error("搜尋 PredictUpload 記錄時發生錯誤", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    /**
+     * 根據客戶編號查詢單一記錄 - 新增端點
+     * 端點: GET /api/predict-uploads/by-custom-no/{customNo}
+     */
+    @GetMapping("/by-custom-no/{customNo}")
+    public ResponseEntity<PredictUpload> getPredictUploadByCustomNo(@PathVariable String customNo) {
+        try {
+            Optional<PredictUpload> result = predictUploadService.getPredictUploadByCustomNo(customNo);
+            return result.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            logger.error("查詢 PredictUpload 記錄時發生錯誤: customNo={}", customNo, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+    
     /**
      * 從 Excel 檔案匯入 PredictUpload 資料。
      * 端點: POST /api/predict-uploads/upload-excel
