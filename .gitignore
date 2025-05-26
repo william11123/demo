@@ -35,3 +35,35 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### 環境變數與敏感資訊 ###
+.env
+.env.local
+.env.*.local
+*.env
+
+### 應用程式配置 ###
+application-local.properties
+application-dev.properties
+application-prod.properties
+*-local.properties
+
+### 日誌檔案 ###
+*.log
+logs/
+
+### 臨時檔案 ###
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+### 作業系統生成的檔案 ###
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
