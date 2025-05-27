@@ -37,7 +37,7 @@ public class PredictUploadService {
     private static final int IN_MONTH_COLUMN = 2;
     private static final int INCOME_COLUMN = 3;
     private static final String[] EXCEL_EXTENSIONS = {".xlsx", ".xls"};
-    private static final String[] EXPORT_COLUMNS = {"ID", "CustomNo", "TaskType", "InMonth", "Income"};
+    private static final String[] EXPORT_COLUMNS = {"CustomNo", "TaskType", "InMonth", "Income"};
     private static final int DEFAULT_INCOME = 0;
 
     private final PredictUploadRepository predictUploadRepository;
@@ -348,11 +348,10 @@ private void addExactCondition(List<Predicate> predicates, CriteriaBuilder cb,
         for (PredictUpload record : records) {
             Row row = sheet.createRow(rowIdx++);
             
-            row.createCell(0).setCellValue(record.getId() != null ? record.getId() : -1L);
-            row.createCell(1).setCellValue(record.getCustomNo() != null ? record.getCustomNo() : "");
-            row.createCell(2).setCellValue(record.getTaskType() != null ? record.getTaskType() : "");
-            row.createCell(3).setCellValue(record.getInMonth() != null ? record.getInMonth() : "");
-            row.createCell(4).setCellValue(record.getIncome());
+            row.createCell(0).setCellValue(record.getCustomNo() != null ? record.getCustomNo() : "");
+            row.createCell(1).setCellValue(record.getTaskType() != null ? record.getTaskType() : "");
+            row.createCell(2).setCellValue(record.getInMonth() != null ? record.getInMonth() : "");
+            row.createCell(3).setCellValue(record.getIncome());
         }
     }
 
