@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+    <!-- 基本設定：編碼、視窗、標題 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>資本資出 前端</title>
@@ -131,48 +132,29 @@
         </section>
 
         <section id="export-excel-section" style="margin-top: 30px;">
-            <h2>根據條件匯出 Excel</h2>
+            <h2>根據條件查詢和匯出 Excel</h2>
             <div class="form-group">
-                <label for="exportCustomNo">CustomNo (模糊):</label>
+                <label for="exportCustomNo">CustomNo:</label>
                 <input type="text" id="exportCustomNo" name="exportCustomNo">
             </div>
             <div class="form-group">
-                <label for="exportTaskType">TaskType (精確):</label>
+                <label for="exportTaskType">TaskType:</label>
                 <input type="text" id="exportTaskType" name="exportTaskType">
             </div>
             <div class="form-group">
-                <label for="exportInMonth">InMonth (精確):</label>
+                <label for="exportInMonth">InMonth:</label>
                 <input type="text" id="exportInMonth" name="exportInMonth">
             </div>
-            <div class="form-group">
-                <label for="exportMinIncome">最低 Income:</label>
-                <input type="number" id="exportMinIncome" name="exportMinIncome">
-            </div>
-            <div class="form-group">
-                <label for="exportMaxIncome">最高 Income:</label>
-                <input type="number" id="exportMaxIncome" name="exportMaxIncome">
-            </div>
-            <button onclick="exportToExcel()">匯出 Excel</button>
-            <div id="exportMessages" style="margin-top: 10px;"><ul></ul></div>
+            <!-- 按鈕群組 -->
+    <div class="button-group">
+        <button onclick="exportToExcel()">匯出 Excel</button>
+        <button onclick="search()">查詢</button>
+    </div>
+    
+    <!-- 訊息顯示區域 -->
+    <div id="exportMessages" style="margin-top: 10px;"><ul></ul></div>
+    <div id="searchResults" style="margin-top: 10px;"><ul></ul></div>
         </section>
-
-            <!--
-            <section id="get-record-section">
-                <h2>根據 CustomNo 查詢記錄</h2>
-                <p><em>(後端對應的 @GetMapping(\"/customNo/{customNo}\") 端點目前未啟用)</em></p>
-                <label for="searchCustomNo">輸入 CustomNo:</label>
-                <input type="text" id="searchCustomNo" name="searchCustomNo"><br>
-                <button onclick="getRecordByCustomNo()">查詢</button>
-                <div id="getResult"></div>
-            </section>
-
-            <section id="get-all-records-section">
-                <h2>查詢所有記錄</h2>
-                <p><em>(後端對應的 @GetMapping 端點目前未啟用)</em></p>
-                <button onclick="getAllRecords()">查詢全部</button>
-                <div id="getAllResult"></div>
-            </section>
-            -->
 
     </div>
 
@@ -244,6 +226,46 @@
             listItem.textContent = message;
             listItem.className = type; // 用於 CSS 樣式
             targetDiv.appendChild(listItem);
+        }
+
+        async function search() {
+            const searchDiv = document.getElementById('searchResults').getElementsByTagName('ul')[0];
+            searchDiv.innerHTML = ''; // 清空先前的搜尋結果
+
+            const customNo = document.getElementById('exportCustomNo').value;
+            const taskType = document.getElementById('exportTaskType').value;
+            const inMonth = document.getElementById('exportInMonth').value;
+
+            const queryParams = new URLSearchParams();
+            if (customNo) queryParams.append('customNo', customNo);
+            if (taskType) queryParams.append('taskType', taskType);
+            if (inMonth) queryParams.append('inMonth', inMonth);
+
+            const queryString = queryParams.toString();
+            const searchUrl = `/api/predict-uploads${queryString ? '?' + queryString : ''}`;
+
+            try {
+                const response = await fetch(searchUrl, {
+                    method: 'GET',
+                });
+
+                if (response.ok) {
+                    const results = await response.json();
+                    if (Array.isArray(results) && results.length > 0) {
+                        results.forEach(record => {
+                            appendMessage(searchDiv, 
+                                ` CustomNo: ${record.customNo}, TaskType: ${record.taskType}, inMonth: ${record.inMonth}, Income: ${record.income}`, 
+                                'info');
+                        });
+                    } else {
+                        appendMessage(searchDiv, '沒有找到符合條件的記錄', 'warning');
+                    }
+                } else {
+                    appendMessage(searchDiv, `查詢失敗，狀態碼: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                appendMessage(searchDiv, `查詢錯誤: ${error.message}`, 'error');
+            }
         }
 
         async function createManualRecord() {
@@ -339,16 +361,12 @@
             const customNo = document.getElementById('exportCustomNo').value;
             const taskType = document.getElementById('exportTaskType').value;
             const inMonth = document.getElementById('exportInMonth').value;
-            const minIncome = document.getElementById('exportMinIncome').value;
-            const maxIncome = document.getElementById('exportMaxIncome').value;
-
+           
             const queryParams = new URLSearchParams();
             if (customNo) queryParams.append('customNo', customNo);
             if (taskType) queryParams.append('taskType', taskType);
             if (inMonth) queryParams.append('inMonth', inMonth);
-            if (minIncome) queryParams.append('minIncome', minIncome);
-            if (maxIncome) queryParams.append('maxIncome', maxIncome);
-
+           
             const queryString = queryParams.toString();
             const exportUrl = `/api/predict-uploads/export${queryString ? '?' + queryString : ''}`;
 

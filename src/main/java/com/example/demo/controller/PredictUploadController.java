@@ -19,9 +19,18 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream; // <--- 新增匯入
 import java.io.IOException;
 import java.text.SimpleDateFormat; // <--- 新增匯入
+import java.util.ArrayList;
 import java.util.Date; // <--- 新增匯入
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional; 
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors; 
+
+// 修正後的 JPA 相關 import
+import jakarta.persistence.EntityManager;      // ✅ 使用 jakarta
+import jakarta.persistence.PersistenceContext; // ✅ 使用 jakarta
+import jakarta.persistence.Query;              // ✅ 使用 jakarta
 @RestController
 @RequestMapping("/api/predict-uploads") // 所有此控制器的端點都會以 /api/predict-uploads 開頭
 public class PredictUploadController {
@@ -32,6 +41,60 @@ public class PredictUploadController {
     @Autowired
     public PredictUploadController(PredictUploadService predictUploadService) {
         this.predictUploadService = predictUploadService;
+    }
+    @PersistenceContext
+    private EntityManager entityManager; // Spring 自動注入
+    
+    @GetMapping("")  // 對應 /api/predict-uploads 的 GET 請求
+    public ResponseEntity<List<Map<String, Object>>> getAllWithConditions(
+            @RequestParam(required = false) String customNo,
+            @RequestParam(required = false) String taskType,
+            @RequestParam(required = false) String inMonth) {
+        
+        try {
+            // 使用原生 SQL 查詢
+            String sql = "SELECT customNo, taskType, inMonth, income FROM bankincome WHERE 1=1";
+            List<Object> params = new ArrayList<>();
+            
+            if (customNo != null && !customNo.isEmpty()) {
+                sql += " AND customNo = ?";
+                params.add(customNo);
+            }
+            if (taskType != null && !taskType.isEmpty()) {
+                sql += " AND taskType = ?";
+                params.add(taskType);
+            }
+            if (inMonth != null && !inMonth.isEmpty()) {
+                sql += " AND inMonth = ?";
+                params.add(inMonth);
+            }
+            
+            // 執行原生 SQL
+            Query query = entityManager.createNativeQuery(sql);
+            for (int i = 0; i < params.size(); i++) {
+                query.setParameter(i + 1, params.get(i));
+            }
+            
+            List<Object[]> results = query.getResultList();
+            
+            // 轉換結果為 Map 格式（保持與前端相容）
+            List<Map<String, Object>> responseList = results.stream()
+                    .map(row -> {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("customNo", row[0]);
+                        map.put("taskType", row[1]);
+                        map.put("inMonth", row[2]);
+                        map.put("income", row[3]);
+                        return map;
+                    })
+                    .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(responseList);
+            
+        } catch (Exception e) {
+            logger.error("查詢時發生錯誤", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
     @PostMapping
     public ResponseEntity<PredictUpload> createManualPredictUpload(@RequestBody UserCreatePredictUpload request) {
@@ -51,7 +114,7 @@ public class PredictUploadController {
     /**
      * 根據查詢條件搜尋記錄 - 新增端點
      * 端點: GET /api/predict-uploads/search?customNo=ABC&taskType=TypeA&inMonth=2024-01
-     */
+    
     @GetMapping("/search")
     public ResponseEntity<List<PredictUpload>> searchPredictUploads(
             @RequestParam(required = false) String customNo,
@@ -66,7 +129,7 @@ public class PredictUploadController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
-
+ */
     /**
      * 根據客戶編號查詢單一記錄 - 新增端點
      * 端點: GET /api/predict-uploads/by-custom-no/{customNo}
