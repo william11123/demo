@@ -151,8 +151,11 @@ public class PredictUploadController {
      * @param file 上傳的 Excel 檔案。
      * @return 包含匯入結果訊息的列表。
      */
-    @PostMapping("/upload-excel")
-    public ResponseEntity<List<String>> uploadPredictDataFromExcel(@RequestParam("file") MultipartFile file) {
+     @PostMapping("/upload-excel")
+    public ResponseEntity<List<String>> uploadPredictDataFromExcel(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(name = "mode", required = false, defaultValue = "import_new") String mode // <--- 新增這一行
+    ) {
         if (file.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(List.of("請選擇一個檔案上傳。"));
         }
@@ -173,11 +176,26 @@ public class PredictUploadController {
         }
 
         try {
-            List<String> importMes***REMOVED***ges = predictUploadService.importPredictUploadsFromExcel(file);
+            List<String> importMes***REMOVED***ges; // <--- 修改這裡，先宣告變數
+            if ("update_income".equalsIgnoreCase(mode)) {
+                logger.info("執行模式：上傳 Excel 並更新金額，檔案：{}", file.getOriginalFilename());
+                // 稍後我們會呼叫新的服務方法
+                importMes***REMOVED***ges = predictUploadService.importAndUpdateIncomeFromExcel(file); // <--- 假設服務層已有此方法
+            } else { // 預設行為或 mode = "import_new"
+                logger.info("執行模式：從 Excel 僅匯入新資料，檔案：{}", file.getOriginalFilename());
+                importMes***REMOVED***ges = predictUploadService.importPredictUploadsFromExcel(file);
+            }
+            
             // 檢查是否有任何錯誤訊息，以決定 HTTP 狀態碼
-            if (importMes***REMOVED***ges.stream().anyMatch(msg -> msg.startsWith("錯誤"))) {
-                 // 如果有錯誤，但也有成功或警告，可以使用 MULTI_STATUS
-                 // 如果所有都是錯誤，或者您想更明確地表示失敗，可以使用 BAD_REQUEST 或 INTERNAL_SERVER_ERROR
+            // 注意：需要處理 importMes***REMOVED***ges 可能為 null 的情況，如果服務方法可能返回 null
+            boolean hasErrors = false;
+            if (importMes***REMOVED***ges != null) {
+                hasErrors = importMes***REMOVED***ges.stream()
+                                          .filter(msg -> msg != null) // 過濾掉 null 訊息
+                                          .anyMatch(msg -> msg.toLowerCase().contains("錯誤"));
+            }
+
+            if (hasErrors) {
                  return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(importMes***REMOVED***ges);
             }
             return ResponseEntity.ok(importMes***REMOVED***ges);
