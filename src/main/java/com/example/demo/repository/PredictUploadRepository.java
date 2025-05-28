@@ -11,4 +11,5 @@ public interface PredictUploadRepository extends JpaRepository<PredictUpload, Lo
     Optional<PredictUpload> findByCustomNo(String customNo);
     Optional<PredictUpload> findByTaskType(String taskType);
     Optional<PredictUpload> findByInMonth(String inmonth);
+    Optional<PredictUpload> findByCustomNoAndInMonthAndTaskType(String customNo, String inMonth, String taskType);
 }
