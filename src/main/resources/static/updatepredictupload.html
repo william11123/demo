@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>匯入 Excel 更新 BankIncome</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: calc(100% - 22px);
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #messages {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #eee;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+            white-space: pre-wrap; /* 保留換行和空格 */
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .message-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .message-item:last-child {
+            border-bottom: none;
+        }
+        .success {
+            color: green;
+        }
+        .warning {
+            color: orange;
+        }
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>匯入 Excel 更新 BankIncome 資料</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div>
+                <label for="excelFile">選擇 Excel 檔案 (.xls 或 .xlsx):</label>
+                <input type="file" id="excelFile" name="file" accept=".xls,.xlsx" required>
+            </div>
+            <!-- 隱藏欄位，用於指定模式為更新金額 -->
+            <input type="hidden" name="mode" value="update_income">
+            <button type="submit">上傳並更新</button>
+        </form>
+
+        <div id="messagesTitle" style="display:none;">
+            <h2>處理結果：</h2>
+        </div>
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // 防止表單傳統提交
+
+            const fileInput = document.getElementById('excelFile');
+            const messagesDiv = document.getElementById('messages');
+            const messagesTitleDiv = document.getElementById('messagesTitle');
+            messagesDiv.innerHTML = ''; // 清空之前的訊息
+            messagesTitleDiv.style.display = 'none';
+
+            if (!fileInput.files.length) {
+                messagesDiv.innerHTML = '<p class="error">請先選擇一個檔案。</p>';
+                messagesTitleDiv.style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('mode', 'update_income'); // 確保 mode 參數被傳遞
+
+            try {
+                const response = await fetch('/api/predict-uploads/upload-excel', {
+                    method: 'POST',
+                    body: formData
+                    // 注意：使用 FormData 時，瀏覽器會自動設定 Content-Type 為 multipart/form-data
+                    // 不需要手動設定 headers 中的 Content-Type
+                });
+
+                const resultMessages = await response.json();
+                messagesTitleDiv.style.display = 'block';
+
+                if (resultMessages && resultMessages.length > 0) {
+                    resultMessages.forEach(msg => {
+                        const p = document.createElement('p');
+                        p.textContent = msg;
+                        p.classList.add('message-item');
+                        if (msg.toLowerCase().includes('成功')) {
+                            p.classList.add('success');
+                        } else if (msg.toLowerCase().includes('警告')) {
+                            p.classList.add('warning');
+                        } else if (msg.toLowerCase().includes('錯誤')) {
+                            p.classList.add('error');
+                        }
+                        messagesDiv.appendChild(p);
+                    });
+                } else if (response.ok) {
+                     messagesDiv.innerHTML = '<p class="success">檔案已提交，但未收到具體處理訊息。</p>';
+                } else {
+                    messagesDiv.innerHTML = `<p class="error">上傳失敗，狀態碼：${response.status}</p>`;
+                    if(resultMessages && typeof resultMessages === 'object' && resultMessages.message) {
+                         messagesDiv.innerHTML += `<p class="error">錯誤訊息：${resultMessages.message}</p>`;
+                    } else if (Array.isArray(resultMessages) && resultMessages.length > 0) {
+                        // 已經在上面處理
+                    } else {
+                         messagesDiv.innerHTML += `<p class="error">無法解析錯誤回應。</p>`;
+                    }
+                }
+            } catch (error) {
+                console.error('上傳過程中發生錯誤:', error);
+                messagesTitleDiv.style.display = 'block';
+                messagesDiv.innerHTML = `<p class="error">上傳過程中發生 JavaScript 錯誤：${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
