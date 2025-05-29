@@ -294,6 +294,7 @@ public class PredictUploadService {
         String trimmedOpType = operationTypeExcel.trim();
         if ("維護".equalsIgnoreCase(trimmedOpType)) return "1";
         if ("作業".equalsIgnoreCase(trimmedOpType)) return "2";
+        if ("專案".equalsIgnoreCase(trimmedOpType)) return "3";
         logger.warn("無法將作業別 '{}' 映射到已知的 TaskType。", operationTypeExcel);
         return null;
     }

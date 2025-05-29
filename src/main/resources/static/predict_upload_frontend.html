@@ -418,7 +418,7 @@
             </div>
             <div class="form-group">
                 <label for="manualTaskType">TaskType</label>
-                <input type="text" id="manualTaskType" name="manualTaskType" placeholder="請輸入任務類型">
+                <input type="text" id="manualTaskType" name="manualTaskType" placeholder="請輸入作業別，維護1，作業2">
             </div>
             <div class="form-group">
                 <label for="manualInMonth">InMonth</label>
@@ -442,11 +442,11 @@
             </div>
             <div class="form-group">
                 <label for="exportTaskType">TaskType</label>
-                <input type="text" id="exportTaskType" name="exportTaskType" placeholder="任務類型（可選）">
+                <input type="text" id="exportTaskType" name="exportTaskType" placeholder="任務類型，維護:1，作業:2（可選）">
             </div>
             <div class="form-group">
                 <label for="exportInMonth">InMonth</label>
-                <input type="text" id="exportInMonth" name="exportInMonth" placeholder="月份（可選）">
+                <input type="text" id="exportInMonth" name="exportInMonth" placeholder="月份，例如2025-04（可選）">
             </div>
             
             <div class="button-group">
@@ -596,21 +596,8 @@
 
             console.log("CustomNo:", customNo, "TaskType:", taskType, "InMonth:", inMonth, "Income:", income);
 
-            if (!customNo || income === '') {
-                resultDiv.innerHTML = '<span class="error">CustomNo 和 Income 為必填欄位。</span>';
-                console.log("Validation failed: CustomNo or Income is empty");
-                button.classList.remove('loading');
-                button.di***REMOVED***bled = false;
-                return;
-            }
-             if (!taskType) {
-                resultDiv.innerHTML = '<span class="error">TaskType 為必填欄位。</span>';
-                button.classList.remove('loading');
-                button.di***REMOVED***bled = false;
-                return;
-            }
-            if (!inMonth) {
-                resultDiv.innerHTML = '<span class="error">InMonth 為必填欄位。</span>';
+            if (!customNo || income === ''||!taskType||!inMonth) {
+                resultDiv.innerHTML = '<span class="error">CustomNo 和 Income 和 TaskType 和 InMonth 為必填欄位。</span>';
                 button.classList.remove('loading');
                 button.di***REMOVED***bled = false;
                 return;
