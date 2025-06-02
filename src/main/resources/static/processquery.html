@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>處理查詢</title>
+    <style>
+        body {
+            font-family: Arial, ***REMOVED***ns-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .result-item {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .result-item p {
+            margin: 5px 0;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>查詢處理詳細資訊</h1>
+        
+        <div>
+            <label for="queryValue">輸入 SN 值:</label>
+            <input type="text" id="queryValue" name="queryValue" placeholder="例如：YOUR_SN_VALUE">
+        </div>
+        
+        <button onclick="fetchProcessDetails()">查詢</button>
+        
+        <div id="loading" style="display:none; margin-top:10px;">正在載入...</div>
+        <div id="resultsTableContainer" style="display:none;">
+            <h2>查詢結果:</h2>
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>店鋪代碼 (ShopNo)</th>
+                        <th>端末機編號 (TermNo)</th>
+                        <th>細項</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsTableBody">
+                </tbody>
+            </table>
+        </div>
+        <div id="errorMes***REMOVED***ge" class="error" style="margin-top:10px;"></div>
+    </div>
+
+    <script>
+        async function fetchProcessDetails() {
+            const queryValue = document.getElementById('queryValue').value;
+            const resultsTableContainer = document.getElementById('resultsTableContainer');
+            const resultsTableBody = document.getElementById('resultsTableBody');
+            const errorMes***REMOVED***geDiv = document.getElementById('errorMes***REMOVED***ge');
+            const loadingDiv = document.getElementById('loading');
+
+            // 清空之前的結果和錯誤訊息
+            resultsTableBody.innerHTML = '';
+            errorMes***REMOVED***geDiv.textContent = '';
+            resultsTableContainer.style.display = 'none';
+
+            if (!queryValue.trim()) {
+                errorMes***REMOVED***geDiv.textContent = '請輸入查詢 SN 值。';
+                return;
+            }
+
+            loadingDiv.style.display = 'block';
+
+            try {
+                // 假設您的後端運行在 localhost:8080
+                // 如果您的 Controller 路徑是 /api/process/details
+                const response = await fetch(`/api/process/details?queryValue=${encodeURIComponent(queryValue)}`);
+                
+                loadingDiv.style.display = 'none';
+
+                if (!response.ok) {
+                    if (response.status === 400) {
+                        errorMes***REMOVED***geDiv.textContent = '查詢參數錯誤或為空，請檢查輸入。';
+                    } else {
+                        errorMes***REMOVED***geDiv.textContent = `查詢失敗，狀態碼：${response.status}`;
+                    }
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    resultsTableContainer.style.display = 'block';
+                    data.forEach(item => {
+                        const row = resultsTableBody.insertRow();
+                        
+                        const cellShopNo = row.insertCell();
+                        cellShopNo.textContent = item.shopno || 'N/A';
+                        
+                        const cellTermNo = row.insertCell();
+                        cellTermNo.textContent = item.termno || 'N/A';
+                        
+                        const cellTaskReplyDet = row.insertCell();
+                        if (item.taskReplyTermDet) {
+                            let detailsHtml = '<ul>';
+                            for (const key in item.taskReplyTermDet) {
+                                if (Object.prototype.hasOwnProperty.call(item.taskReplyTermDet, key)) {
+                                    detailsHtml += `<li><strong>${key}:</strong> ${item.taskReplyTermDet[key] || 'N/A'}</li>`;
+                                }
+                            }
+                            detailsHtml += '</ul>';
+                            cellTaskReplyDet.innerHTML = detailsHtml;
+                        } else {
+                            cellTaskReplyDet.textContent = 'N/A';
+                        }
+                    });
+                } else {
+                    errorMes***REMOVED***geDiv.textContent = '找不到符合條件的資料。';
+                }
+
+            } catch (error) {
+                loadingDiv.style.display = 'none';
+                console.error('查詢過程中發生錯誤:', error);
+                errorMes***REMOVED***geDiv.textContent = '查詢過程中發生錯誤，請檢查主控台或網路連線。';
+            }
+        }
+    </script>
+</body>
+</html>
