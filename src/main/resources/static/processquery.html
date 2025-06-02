@@ -163,6 +163,9 @@
                             let detailsHtml = '<ul>';
                             for (const key in item.taskReplyTermDet) {
                                 if (Object.prototype.hasOwnProperty.call(item.taskReplyTermDet, key)) {
+                                    if (key === 'termno') {
+                                        continue; // 如果 key 是 'termno'，則跳過此次迴圈
+                                    }
                                     detailsHtml += `<li><strong>${key}:</strong> ${item.taskReplyTermDet[key] || 'N/A'}</li>`;
                                 }
                             }

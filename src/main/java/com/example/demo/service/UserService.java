@@ -5,7 +5,6 @@ import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.security.crypto.password.PasswordEncoder; // 假設您有密碼加密器
 import org.springframework.web.multipart.MultipartFile; // 新增：處理檔案上傳
 import org.apache.poi.ss.usermodel.*; // 新增：Apache POI 核心介面 (Workbook, Sheet, Row, Cell, CellType, DataFormatter)
 import org.apache.poi.xssf.usermodel.XSSFWorkbook; // 新增：處理 .xlsx 格式
@@ -22,18 +21,16 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder; // 假設注入密碼加密器
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
-    public User createUser(String username, String rawPassword) {
+    public User createUser(String username, String Password) {
         User newUser = new User();
         newUser.setUsername(username);
-        newUser.setPassword(passwordEncoder.encode(rawPassword)); // 儲存前加密密碼
+        newUser.setPassword(Password); // 儲存前加密密碼
         return userRepository.***REMOVED***ve(newUser); // 使用 ***REMOVED***ve 方法儲存使用者到資料庫
     }
 
@@ -67,7 +64,7 @@ public class UserService {
 
                     // 如果在 userDataForUpdate 中提供了密碼，則更新並加密
                     if (userDataForUpdate.getPassword() != null && !userDataForUpdate.getPassword().isEmpty()) {
-                        existingUser.setPassword(passwordEncoder.encode(userDataForUpdate.getPassword()));
+                        existingUser.setPassword(userDataForUpdate.getPassword());
                     }
                     // 假設 User 模型還有其他欄位，例如 email, roles 等，可以在這裡一併更新
                     // existingUser.setEmail(userDataForUpdate.getEmail());
@@ -96,7 +93,7 @@ public class UserService {
 
                     // 檢查 password 是否需要更新
                     if (userDataForPatch.getPassword() != null && !userDataForPatch.getPassword().isEmpty()) {
-                        existingUser.setPassword(passwordEncoder.encode(userDataForPatch.getPassword()));
+                        existingUser.setPassword(userDataForPatch.getPassword());
                     }
 
                     // 假設 User 模型還有其他欄位，例如 email, roles 等
