@@ -82,7 +82,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>查詢處理詳細資訊</h1>
+        <h1>歷程查詢</h1>
         
         <div>
             <label for="queryValue">輸入 SN 值:</label>
@@ -146,7 +146,6 @@
                 }
 
                 const data = await response.json();
-
                 if (data && data.length > 0) {
                     resultsTableContainer.style.display = 'block';
                     data.forEach(item => {
@@ -160,13 +159,21 @@
                         
                         const cellTaskReplyDet = row.insertCell();
                         if (item.taskReplyTermDet) {
+                            // 1. 定義 key 的映射
+                            const keyMappings = {
+                                "realsn": "目前在商店的sn",
+                                "changesn": "要換進商店的sn",
+                                // ... 您可以根據 item.taskReplyTermDet 中可能出現的 key 來添加更多映射
+                            };
                             let detailsHtml = '<ul>';
                             for (const key in item.taskReplyTermDet) {
                                 if (Object.prototype.hasOwnProperty.call(item.taskReplyTermDet, key)) {
                                     if (key === 'termno') {
                                         continue; // 如果 key 是 'termno'，則跳過此次迴圈
                                     }
-                                    detailsHtml += `<li><strong>${key}:</strong> ${item.taskReplyTermDet[key] || 'N/A'}</li>`;
+                                    // 2. 獲取自定義顯示名稱，如果映射中沒有，則使用原始 key
+                                    const displayName = keyMappings[key] || key;                             
+                                    detailsHtml += `<li><strong>${displayName}:</strong> ${item.taskReplyTermDet[key] || 'N/A'}</li>`;
                                 }
                             }
                             detailsHtml += '</ul>';
