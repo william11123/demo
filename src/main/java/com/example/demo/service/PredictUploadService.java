@@ -203,7 +203,9 @@ public class PredictUploadService {
             predictUploadRepository.***REMOVED***ve(recordToUpdate);
             mes***REMOVED***ges.add("成功：第 " + rowNumber + " 行 (CustomNo: " + customNo + ", InMonth: " + inMonthExcel + ", TaskType: " + taskTypeDB + ") 金額已從 " + oldIncome + " 更新為 " + newIncome + "。");
         } else {
-            mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行未找到符合條件的記錄 (CustomNo: " + customNo + ", InMonth: " + inMonthExcel + ", TaskType: " + taskTypeDB + ")，未執行更新。");
+            UserCreatePredictUpload createDto = new UserCreatePredictUpload(customNo, taskTypeDB, inMonthExcel, newIncome);
+            createPredictUpload(createDto);
+            mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行未找到符合條件的記錄 (CustomNo: " + customNo + ", InMonth: " + inMonthExcel + ", TaskType: " + taskTypeDB + ")，未執行更新，新增一份新資料");
         }
     }
 
