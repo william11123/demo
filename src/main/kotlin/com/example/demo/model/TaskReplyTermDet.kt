@@ -10,7 +10,7 @@ import jakarta.persistence.Column
 data class TaskReplyTermDet( // Kotlin 的 data class 會自動產生 getter, setter, equals, hashCode, toString 等方法
 
     @Id // 標記此欄位為主鍵
-    @Column(name = "termno", nullable = false) // 懶得管大小寫了
+    @Column(name = "termno", nullable = false) // 懶得管大小寫了，以後再來改成駝峰式命名
     var termno: String, // 主鍵 termno，定義為非空，因為資料庫不允許為 null。
 
     @Column(name = "tono")   // 對應資料庫欄位 'tono'
