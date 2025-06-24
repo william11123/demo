@@ -12,10 +12,10 @@ import java.util.List;
 // 假設這個 Repository 是針對 TaskReplyTermDet 或某個相關實體
 public interface ProcessQueryRepository extends JpaRepository<TaskReplyTermDet, String> {
 
-    @Query("SELECT NEW com.example.demo.dto.ProcessQueryDTO(t.shopno, trtd.termno, trtd) " +
+    @Query("SELECT distinct NEW com.example.demo.dto.ProcessQueryDTO(t.compdate,t.shopno,t.iscomp,trtd.tono,trtd.mateno,trtd.termno, trtd.realsn,trtd.changesn) " +
            "FROM TaskReplyTermDet trtd " +
            "JOIN TaskOrder t ON trtd.tono = t.tono " + // 確保 TaskOrder 是已知的實體且此 JOIN 語法有效
            "WHERE trtd.realsn = :whatyouinput OR trtd.changesn = :whatyouinput " +
-           "ORDER BY trtd.upd_date DESC")
+           "ORDER BY t.compdate DESC")
     List<ProcessQueryDTO> findProcess(@Param("whatyouinput") String inputValue);
 }

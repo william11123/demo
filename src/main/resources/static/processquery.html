@@ -157,30 +157,19 @@
                         const cellTermNo = row.insertCell();
                         cellTermNo.textContent = item.termno || 'N/A';
                         
-                        const cellTaskReplyDet = row.insertCell();
-                        if (item.taskReplyTermDet) {
-                            // 1. 定義 key 的映射
-                            const keyMappings = {
-                                "realsn": "目前在商店的sn",
-                                "changesn": "要換進商店的sn",
-                                // ... 您可以根據 item.taskReplyTermDet 中可能出現的 key 來添加更多映射
-                            };
-                            let detailsHtml = '<ul>';
-                            for (const key in item.taskReplyTermDet) {
-                                if (Object.prototype.hasOwnProperty.call(item.taskReplyTermDet, key)) {
-                                    if (key === 'termno') {
-                                        continue; // 如果 key 是 'termno'，則跳過此次迴圈
-                                    }
-                                    // 2. 獲取自定義顯示名稱，如果映射中沒有，則使用原始 key
-                                    const displayName = keyMappings[key] || key;                             
-                                    detailsHtml += `<li><strong>${displayName}:</strong> ${item.taskReplyTermDet[key] || 'N/A'}</li>`;
-                                }
-                            }
-                            detailsHtml += '</ul>';
-                            cellTaskReplyDet.innerHTML = detailsHtml;
-                        } else {
-                            cellTaskReplyDet.textContent = 'N/A';
-                        }
+                        const cellDetails = row.insertCell();
+                        
+                        // 直接從 item 物件讀取所有需要的欄位來建立細項列表
+                        let detailsHtml = '<ul>';
+                        detailsHtml += `<li><strong>單號 (tono):</strong> ${item.tono || 'N/A'}</li>`;
+                        detailsHtml += `<li><strong>料號 (mateno):</strong> ${item.mateno || 'N/A'}</li>`;
+                        detailsHtml += `<li><strong>目前在商店的SN:</strong> ${item.realsn || 'N/A'}</li>`;
+                        detailsHtml += `<li><strong>要換進商店的SN:</strong> ${item.changesn || 'N/A'}</li>`;
+                        detailsHtml += `<li><strong>完成日期 (compdate):</strong> ${item.compdate || 'N/A'}</li>`;
+                        detailsHtml += `<li><strong>是否完成 (iscomp):</strong> ${item.iscomp || 'N/A'}</li>`;
+                        detailsHtml += '</ul>';
+                        
+                        cellDetails.innerHTML = detailsHtml;
                     });
                 } else {
                     errorMes***REMOVED***geDiv.textContent = '找不到符合條件的資料。';

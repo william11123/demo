@@ -18,4 +18,10 @@ data class TaskOrder( // Kotlin 的 data class 會自動產生 getter, setter, e
 
     @Column(name = "custmno")   // 對應資料庫欄位 'custmno'
     var custmno: String? = null, // 客戶代碼，可為 null。
+
+    @Column(name = "CompDate") // 對應資料庫欄位 'CompDate'
+    var compdate: String? = null,    
+
+    @Column(name = "iscomp")   // 對應資料庫欄位 'iscomp'
+    var iscomp: String? = null
 )
