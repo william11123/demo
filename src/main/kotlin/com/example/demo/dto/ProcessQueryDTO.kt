@@ -1,10 +1,12 @@
 package com.example.demo.dto 
 
-import com.example.demo.model.TaskReplyTermDet // 確保 TaskReplyTermDet 的路徑正確
-
-
 data class ProcessQueryDTO(
+    val compdate: String? = null,
     val shopno: String? = null,
-    val termno: String,
-    val taskReplyTermDet: TaskReplyTermDet
+    val iscomp:String? = null,
+    val termno: String? = null,
+    val tono: String?,
+    val mateno: String?,
+    val realsn: String?,
+    val changesn: String?
 )
