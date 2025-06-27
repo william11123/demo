@@ -15,6 +15,7 @@ import org.springframework.http.MediaType; // <--- 新增匯入
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.CrossOrigin; // <-- 新增這個 import
 
 import java.io.ByteArrayInputStream; // <--- 新增匯入
 import java.io.IOException;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 import jakarta.persistence.EntityManager;      // ✅ 使用 jakarta
 import jakarta.persistence.PersistenceContext; // ✅ 使用 jakarta
 import jakarta.persistence.Query;              // ✅ 使用 jakarta
+@CrossOrigin(origins = "*") // 允許所有來源的跨域請求
 @RestController
 @RequestMapping("/api/predict-uploads") // 所有此控制器的端點都會以 /api/predict-uploads 開頭
 public class PredictUploadController {

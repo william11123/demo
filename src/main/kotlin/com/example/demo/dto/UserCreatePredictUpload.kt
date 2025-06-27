@@ -31,20 +31,21 @@ data class PredictUploadImportData(
      * @return UserCreatePredictUpload 如果轉換成功，否則為 null
      */
     fun toCreateDto(): UserCreatePredictUpload? {
-        return if (customNo?.isNotBlank() == true && 
-                   taskType?.isNotBlank() == true && 
-                   inMonth?.isNotBlank() == true && 
-                   income != null) {
-            UserCreatePredictUpload(customNo, taskType, inMonth, income)
+        return if (isValid()) {
+            // 因為 isValid() 已經檢查過，這裡可以安全地使用 !!
+            UserCreatePredictUpload(customNo!!, taskType!!, inMonth!!, income!!)
         } else {
             null
         }
     }
     
     /**
-     * 檢查資料是否有效（必要欄位不為空）
+     * 檢查資料是否有效（所有必要欄位都不為空或空白）
      */
     fun isValid(): Boolean {
-        return customNo?.isNotBlank() == true
+        return customNo?.isNotBlank() == true &&
+               taskType?.isNotBlank() == true &&
+               inMonth?.isNotBlank() == true &&
+               income != null
     }
 }
