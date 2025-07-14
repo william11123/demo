@@ -18,5 +18,8 @@ data class User_Info( // Kotlin 的 data class 會自動產生 getter, setter, e
     var userid: String, 
 
     @Column(name = "Password", nullable = false)
-    var password: String
+    var password: String,
+
+    @Column(name = "SecLevel", nullable = false)
+    var seclevel: String
 )
