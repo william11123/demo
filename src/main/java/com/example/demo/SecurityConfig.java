@@ -4,11 +4,15 @@ package com.example.demo;
 import com.example.demo.model.User_Info; // 匯入 Kotlin 實體
 import com.example.demo.repository.UserInfoRepository; // 匯入您的 Repository
 
+import java.util.Arrays; // <-- 【修正點】新增這個 import
+import java.util.List;   // <-- 【修正點】新增這個 import
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.GrantedAuthority; // <-- 新增 import
+import org.springframework.security.core.authority.SimpleGrantedAuthority; // <-- 新增 import
 import org.springframework.security.core.userdetails.UserDetails;
 //import org.springframework.security.core.userdetails.User;
 //import org.springframework.security.core.userdetails.UserDetails;
@@ -35,7 +39,11 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authorizeRequests ->
                 authorizeRequests
-                    .requestMatchers("/public/**", "/login","/api/users/**").permitAll() // 公開路徑和登入頁面允許所有人存取
+                    // 只有 ADMIN 角色的使用者可以訪問 /api/users/upload-excel
+                    .requestMatchers("/api/predict-uploads/upload-excel").hasRole("A") 
+                    // 假設其他 /api/users/** 路徑需要 ADMIN 或 USER 角色
+                    .requestMatchers("/api/users/**").hasAuthority("ACCESS_API")
+                    .requestMatchers("/public/**", "/login").permitAll() // 公開路徑和登入頁面允許所有人存取
                     .anyRequest().authenticated() // 其他所有請求都需要驗證
             )
             .formLogin(formLogin ->
@@ -58,12 +66,18 @@ public class SecurityConfig {
         return username -> { // 'username' 參數對應到您實體中的 'user_id'
             User_Info user = userInfoRepository.findByUserid(username)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found with username (user_id): " + username));
-            // 注意：這裡的 authorities 可以根據您的 User_Info 模型中的角色欄位來設定 (如果有的話)
-            // 目前範例使用空的權限列表
+            // 1. 建立使用者自己的角色 (例如 "ROLE_A", "ROLE_B" 等)
+            GrantedAuthority userRole = new SimpleGrantedAuthority("ROLE_" + user.getSeclevel().toUpperCase());
+            // 2. 建立一個所有 a,b,c,d 等級使用者都共有的通用權限
+            GrantedAuthority accessApiAuthority = new SimpleGrantedAuthority("ACCESS_API");
+
+            // 3. 將角色和權限都放入一個列表中
+            List<GrantedAuthority> authorities = Arrays.asList(userRole, accessApiAuthority);
+
             return new org.springframework.security.core.userdetails.User(
                     user.getUserid(),
                     user.getPassword(),
-                    new ArrayList<>() // 您可以根據需要添加權限
+                    authorities         
             );
         };
     }
