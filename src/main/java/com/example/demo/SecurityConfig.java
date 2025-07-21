@@ -44,6 +44,7 @@ public class SecurityConfig {
                     // 假設其他 /api/users/** 路徑需要 ADMIN 或 USER 角色
                     .requestMatchers("/api/users/**").hasAuthority("ACCESS_API")
                     .requestMatchers("/public/**", "/login").permitAll() // 公開路徑和登入頁面允許所有人存取
+                    .requestMatchers("/api/location/**").permitAll()
                     .anyRequest().authenticated() // 其他所有請求都需要驗證
             )
             .formLogin(formLogin ->
