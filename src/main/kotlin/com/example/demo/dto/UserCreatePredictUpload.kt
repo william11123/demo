@@ -1,10 +1,10 @@
 package com.example.demo.dto 
 
 data class UserCreatePredictUpload(
-    val customNo: String,
-    val taskType: String,
-    val inMonth: String,
-    val income: Int
+    val customNo: String? = null,
+    val taskType: String? = null,
+    val inMonth: String? = null,
+    val income: Int? = null
 )
 
 data class PredictUploadQueryCriteria(
