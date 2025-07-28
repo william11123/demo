@@ -1,82 +1,90 @@
 package com.example.demo.controller;
 
-// 1. 匯入 Logger 相關類別
+import com.example.demo.dto.CheckInRequest;
+import com.example.demo.model.LocationTarget;
+import com.example.demo.service.CheckInService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.example.demo.service.LocationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/location")
 public class LocationController {
 
-    // 2. 建立一個 Logger 實例
     private static final Logger logger = LoggerFactory.getLogger(LocationController.class);
 
-    private final LocationService locationService;
+    private final CheckInService checkInService;
 
-    // 為了簡化範例，我們在記憶體中儲存使用者位置。
-    // 在真實應用中，您應該將其存入資料庫。
-    // Map<UserId, LocationData>
-    private static final Map<String, Map<String, Double>> userLocations = new ConcurrentHashMap<>();
+    private static final Map<String, Map<String, Object>> userLastLocations = new ConcurrentHashMap<>();
 
-    public LocationController(LocationService locationService) {
-        this.locationService = locationService;
+    public LocationController(CheckInService checkInService) {
+        this.checkInService = checkInService;
     }
 
-    /**
-     * 更新或記錄使用者的目前位置。
-     * Flutter App 會呼叫這個 API。
-     */
-    @PostMapping("/update/{userId}")
-    public ResponseEntity<Void> updateUserLocation(@PathVariable String userId, @RequestBody Map<String, Double> location) {
-        userLocations.put(userId, location);
-        System.out.println("更新使用者 " + userId + " 位置: " + location);
-        return ResponseEntity.ok().build();
+    @GetMapping("/all-targets")
+    public ResponseEntity<List<LocationTarget>> getAllTargets() {
+        List<LocationTarget> targets = checkInService.getAllLocationTargets();
+        return ResponseEntity.ok(targets);
     }
-
     /**
-     * 處理使用者的到達請求。
-     * Flutter App 會在使用者按下按鈕時呼叫這個 API。
+     * 處理使用者簽到請求，包含距離驗證和資料庫儲存。
+     * Flutter App 應該呼叫這個 API。
+     * 端點: POST /api/location/check-in
      */
-    @PostMapping("/arrive/{userId}")
-    public ResponseEntity<Map<String, String>> handleArrivalRequest(@PathVariable String userId, @RequestBody Map<String, Double> location) {// <-- 將回傳類型從 String 改為 Map
-        final double TARGET_LAT = 37.42200;
-        final double TARGET_LON = -122.08400;
+    @PostMapping("/check-in")
+    public ResponseEntity<Map<String, String>> handleCheckIn(@RequestBody CheckInRequest request) {
+        logger.info("收到來自使用者 '{}' 在 '{}' 的簽到請求", request.getUserId(), request.getLocationName());
 
-        double userLat = location.get("latitude");
-        double userLon = location.get("longitude");
+        // 更新位置資訊時，一併存入地點名稱
+        Map<String, Object> locationData = new HashMap<>();
+        locationData.put("latitude", request.getLatitude());
+        locationData.put("longitude", request.getLongitude());
+        locationData.put("locationName", request.getLocationName()); // 新增地點名稱
+        userLastLocations.put(request.getUserId(), locationData);
+        logger.info("已更新使用者 '{}' 的最後位置及地點。", request.getUserId());
 
-        boolean isApproved = locationService.processArrivalRequest(userLat, userLon, TARGET_LAT, TARGET_LON);
+        Map<String, String> response = new HashMap<>();
+        try {
+            String resultMes***REMOVED***ge = checkInService.performCheckIn(request);
+            response.put("mes***REMOVED***ge", resultMes***REMOVED***ge);
 
-        // 建立一個 Map 來存放要回傳的訊息
-        Map<String, String> response = new java.util.HashMap<>();
-
-        if (isApproved) {
-            logger.info("使用者 {} 的到達請求已核准！", userId);
-            response.put("mes***REMOVED***ge", "請求已核准：您在目標範圍內。");
-            return ResponseEntity.ok(response); // <-- 回傳 Map 物件
-        } else {
-            logger.warn("使用者 {} 的到達請求被拒絕。", userId);
-            response.put("mes***REMOVED***ge", "請求被拒絕：您不在目標範圍內。");
-            // 注意：對於業務邏輯上的拒絕，我們仍然可以回傳 200 OK，
-            // 只是在 JSON 內容中告知結果，這樣前端比較好處理。
-            // 當然，您也可以維持 badRequest()，取決於您的 API 設計風格。
-            return ResponseEntity.ok(response);
+            if (resultMes***REMOVED***ge.contains("成功")) {
+                logger.info("使用者 '{}' 在 '{}' 簽到成功。", request.getUserId(), request.getLocationName());
+                return ResponseEntity.ok(response);
+            } else {
+                logger.warn("使用者 '{}' 在 '{}' 簽到失敗：{}", request.getUserId(), request.getLocationName(), resultMes***REMOVED***ge);
+                return ResponseEntity.badRequest().body(response);
+            }
+        } catch (Exception e) {
+            logger.error("處理簽到請求時發生未預期錯誤", e);
+            response.put("mes***REMOVED***ge", "伺服器內部錯誤，請稍後再試。");
+            return ResponseEntity.status(500).body(response);
         }
     }
 
     /**
-     * 讓管理者取得所有使用者的位置。
-     * 管理者地圖頁面會呼叫這個 API。
+     * 讓管理者取得所有使用者最後一次簽到時的位置和地點名稱。
+     * 管理者地圖頁面可以呼叫這個 API。
+     * 端點: GET /api/location/admin/all-locations
      */
-    @GetMapping("/admin/all")
-    public ResponseEntity<Map<String, Map<String, Double>>> getAllUserLocations() {
-        return ResponseEntity.ok(userLocations);
+    @GetMapping("/admin/all-locations")
+    public ResponseEntity<Map<String, Map<String, Object>>> getAllUserLastLocations() {
+        // 將 ConcurrentHashMap 轉換為新的 HashMap，以幫助編譯器進行類型推斷。
+        return ResponseEntity.ok(new HashMap<>(userLastLocations));
+    }
+    /**
+     * 【新功能】讓管理者取得所有永久儲存的簽到歷史紀錄。
+     * 端點: GET /api/location/admin/history
+     */
+    @GetMapping("/admin/history")
+    public ResponseEntity<List<CheckInRecord>> getCheckInHistory() {
+        List<CheckInRecord> history = checkInService.getCheckInHistory();
+        return ResponseEntity.ok(history);
     }
 }
