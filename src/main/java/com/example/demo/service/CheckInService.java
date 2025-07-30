@@ -6,6 +6,7 @@ import com.example.demo.model.LocationTarget; // 匯入新的地點模型
 import com.example.demo.repository.CheckInRecordRepository;
 import com.example.demo.repository.LocationTargetRepository; // 匯入新的地點 Repository
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.util.List;

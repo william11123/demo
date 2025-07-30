@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.CheckInRequest;
 import com.example.demo.model.LocationTarget;
 import com.example.demo.service.CheckInService;
+import com.example.demo.model.CheckInRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
