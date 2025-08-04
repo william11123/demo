@@ -25,7 +25,7 @@ public class ExcelExportService {
      * @return 包含 Excel 資料的 ByteArrayInputStream。
      */
     public ByteArrayInputStream exportBankInfoToExcel(List<BankInfoDTO> bankInfoList) throws IOException {
-        String[] headers = {"銀行名稱", "分行名稱", "地址", "銷售負責人", "電話一", "電話二", "完工月份"};
+        String[] headers = {"銀行名稱", "商店名稱", "地址", "商店聯絡人", "電話一", "電話二", "完工月份"};
         
         // 使用 try-with-resources 確保資源被正確關閉
         try (

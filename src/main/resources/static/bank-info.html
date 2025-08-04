@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>銀行資訊查詢</title>
+    <title>銀行資訊匯出</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -11,93 +11,54 @@
         .btn-di***REMOVED***bled { cursor: not-allowed; opacity: 0.5; }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen">
 
-    <div class="container mx-auto p-4 md:p-8">
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h1 class="text-2xl font-bold mb-4 text-gray-700">銀行資訊查詢</h1>
-            <p class="text-gray-600 mb-4">請選擇完工月份的區間進行查詢。</p>
-            <div class="flex flex-wrap items-end gap-4">
-                <div class="flex-grow sm:flex-grow-0">
-                    <label for="start-month-input" class="block mb-1 text-sm font-medium text-gray-700">開始月份</label>
+    <div class="container mx-auto p-4 md:p-8 max-w-2xl">
+        <div class="bg-white rounded-lg shadow-md p-8 mb-6">
+            <h1 class="text-2xl font-bold mb-4 text-gray-700">銀行資訊匯出</h1>
+            <p class="text-gray-600 mb-8">請選擇要匯出的完工月份區間，然後點擊「匯出 Excel」按鈕。</p>
+            
+            <div class="space-y-6">
+                <div>
+                    <label for="start-month-input" class="block mb-2 text-sm font-medium text-gray-700">開始月份</label>
                     <input type="month" id="start-month-input" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5" value="2025-01">
                 </div>
-                <div class="flex-grow sm:flex-grow-0">
-                    <label for="end-month-input" class="block mb-1 text-sm font-medium text-gray-700">結束月份</label>
+                <div>
+                    <label for="end-month-input" class="block mb-2 text-sm font-medium text-gray-700">結束月份</label>
                     <input type="month" id="end-month-input" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5" value="2025-05">
                 </div>
-                <button id="query-btn" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 rounded-lg transition duration-300 ease-in-out">
-                    查詢
-                </button>
-                <button id="export-btn" class="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-5 rounded-lg transition duration-300 ease-in-out btn-di***REMOVED***bled" di***REMOVED***bled>
-                    匯出 Excel
-                </button>
             </div>
+
             <!-- 訊息提示區 -->
-            <div id="mes***REMOVED***ge-area" class="mt-4 text-center"></div>
+            <div id="mes***REMOVED***ge-area" class="mt-6 text-center h-6"></div>
+
+            <button id="export-btn" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg transition duration-300 ease-in-out">
+                匯出 Excel
+            </button>
         </div>
 
-        <div class="bg-white rounded-lg shadow-md overflow-x-auto">
-            <table class="w-full text-sm text-left text-gray-600">
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3">銀行名稱</th>
-                        <th scope="col" class="px-6 py-3">分行名稱</th>
-                        <th scope="col" class="px-6 py-3">地址</th>
-                        <th scope="col" class="px-6 py-3">銷售負責人</th>
-                        <th scope="col" class="px-6 py-3">電話一</th>
-                        <th scope="col" class="px-6 py-3">電話二</th>
-                        <th scope="col" class="px-6 py-3">完工月份</th>
-                    </tr>
-                </thead>
-                <tbody id="results-table-body">
-                </tbody>
-            </table>
-            <div id="no-results" class="p-6 text-center text-gray-500">
-                <p>請點擊「查詢」按鈕以顯示結果。</p>
-            </div>
-        </div>
         <div class="mt-6 text-center">
             <a href="/welcome" class="text-blue-600 hover:underline">返回首頁</a>
         </div>
     </div>
 
     <script>
-        // --- DOM Elements ---
         const startMonthInput = document.getElementById('start-month-input');
         const endMonthInput = document.getElementById('end-month-input');
-        const queryBtn = document.getElementById('query-btn');
         const exportBtn = document.getElementById('export-btn');
-        const tableBody = document.getElementById('results-table-body');
         const mes***REMOVED***geArea = document.getElementById('mes***REMOVED***ge-area');
-        const noResultsMes***REMOVED***ge = document.getElementById('no-results');
 
-        // --- UI Functions ---
         function showMes***REMOVED***ge(mes***REMOVED***ge, isError = false) {
             mes***REMOVED***geArea.textContent = mes***REMOVED***ge;
-            mes***REMOVED***geArea.className = isError ? 'mt-4 text-center text-red-600' : 'mt-4 text-center text-blue-600';
+            mes***REMOVED***geArea.className = isError ? 'text-center h-6 text-red-600' : 'text-center h-6 text-blue-600';
         }
 
         function clearMes***REMOVED***ge() {
             mes***REMOVED***geArea.textContent = '';
         }
 
-        function setUIState(isQuerying) {
-            queryBtn.di***REMOVED***bled = isQuerying;
-            // 查詢時，一律禁用匯出按鈕
-            exportBtn.di***REMOVED***bled = true;
-
-            if (isQuerying) {
-                queryBtn.classList.add('btn-di***REMOVED***bled');
-            } else {
-                queryBtn.classList.remove('btn-di***REMOVED***bled');
-            }
-             // 只有在查詢成功且有資料時才啟用匯出，其他情況都禁用
-            exportBtn.classList.add('btn-di***REMOVED***bled');
-        }
-
-        // --- Main Logic ---
-        function performQuery() {
+        exportBtn.addEventListener('click', () => {
+            clearMes***REMOVED***ge();
             const startMonth = startMonthInput.value;
             const endMonth = endMonthInput.value;
 
@@ -111,65 +72,21 @@
                 return;
             }
 
-            // 2. 重設 UI 狀態
-            clearMes***REMOVED***ge();
-            tableBody.innerHTML = '';
-            noResultsMes***REMOVED***ge.style.display = 'none';
-            setUIState(true);
-            showMes***REMOVED***ge('查詢中，請稍候...');
+            // 2. 顯示提示訊息並禁用按鈕
+            showMes***REMOVED***ge('正在準備匯出檔案，請稍候...');
+            exportBtn.di***REMOVED***bled = true;
+            exportBtn.classList.add('btn-di***REMOVED***bled');
 
-            // 3. 呼叫後端 API
-            fetch(`/api/bank-info?startMonth=${startMonth}&endMonth=${endMonth}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`查詢失敗，狀態碼: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    setUIState(false);
-                    clearMes***REMOVED***ge();
-                    if (data && data.length > 0) {
-                        data.forEach(item => {
-                            const escape = (str) => str ? String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;') : '';
-                            const row = `
-                                <tr class="bg-white border-b hover:bg-gray-50">
-                                    <td class="px-6 py-4">${escape(item.bankname)}</td>
-                                    <td class="px-6 py-4">${escape(item.nickName)}</td>
-                                    <td class="px-6 py-4">${escape(item.addr)}</td>
-                                    <td class="px-6 py-4">${escape(item.***REMOVED***leLia)}</td>
-                                    <td class="px-6 py-4">${escape(item.tel1)}</td>
-                                    <td class="px-6 py-4">${escape(item.tel2)}</td>
-                                    <td class="px-6 py-4">${escape(item.compMonth)}</td>
-                                </tr>`;
-                            tableBody.innerHTML += row;
-                        });
-                        // 查詢成功且有資料時，才啟用匯出按鈕
-                        exportBtn.di***REMOVED***bled = false;
-                        exportBtn.classList.remove('btn-di***REMOVED***bled');
-                    } else {
-                        noResultsMes***REMOVED***ge.style.display = 'block';
-                        noResultsMes***REMOVED***ge.textContent = '找不到符合條件的資料。';
-                    }
-                })
-                .catch(error => {
-                    setUIState(false);
-                    showMes***REMOVED***ge(error.mes***REMOVED***ge, true);
-                });
-        }
-
-        // --- Event Listeners ---
-        queryBtn.addEventListener('click', performQuery);
-
-        exportBtn.addEventListener('click', () => {
-            const startMonth = startMonthInput.value;
-            const endMonth = endMonthInput.value;
-            // 匯出前再次驗證
-            if (!startMonth || !endMonth || startMonth > endMonth) {
-                showMes***REMOVED***ge('無法匯出：請先使用有效的日期區間進行查詢。', true);
-                return;
-            }
+            // 3. 觸發下載
             window.location.href = `/api/bank-info/export?startMonth=${startMonth}&endMonth=${endMonth}`;
+
+            // 4. 為了防止使用者在下載期間重複點擊，我們在短暫延遲後重新啟用按鈕。
+            //    這是一個簡單的處理方式，因為我們無法確切知道下載何時開始或完成。
+            setTimeout(() => {
+                clearMes***REMOVED***ge();
+                exportBtn.di***REMOVED***bled = false;
+                exportBtn.classList.remove('btn-di***REMOVED***bled');
+            }, 5000); // 5秒後自動恢復按鈕功能
         });
     </script>
 </body>
