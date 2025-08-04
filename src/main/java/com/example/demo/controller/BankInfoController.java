@@ -14,13 +14,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 
 /**
- * 處理銀行資訊查詢與匯出請求的 REST Controller。
+ * 處理銀行資訊查詢與匯出請求的 REST Controller (最終簡化版)。
  */
 @RestController
 public class BankInfoController {
@@ -45,22 +47,22 @@ public class BankInfoController {
             YearMonth startYearMonth = YearMonth.parse(startMonthStr);
             YearMonth endYearMonth = YearMonth.parse(endMonthStr);
 
-            // 開始日期為開始月份的第一天
             LocalDate startDate = startYearMonth.atDay(1);
-            // 結束日期為結束月份的最後一天的隔天，以使用 '<' 進行比較
             LocalDate endDate = endYearMonth.atEndOfMonth().plusDays(1);
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+            // 直接呼叫 Service 執行查詢並等待結果
             List<BankInfoDTO> results = bankInfoService.getBankInfo(startDate.format(formatter), endDate.format(formatter));
             return ResponseEntity.ok(results);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            // 如果查詢失敗或參數錯誤，回傳 400 錯誤，並回傳一個空的列表
+            return ResponseEntity.badRequest().body(Collections.emptyList());
         }
     }
 
     /**
-     * 處理將銀行資訊匯出為 Excel 的 GET 請求，支援日期區間。
+     * 處理將銀行資訊匯出為 Excel 的 GET 請求。
      * @param startMonthStr 以 "yyyy-MM" 格式表示的開始年月。
      * @param endMonthStr   以 "yyyy-MM" 格式表示的結束年月。
      * @return 包含 Excel 檔案的 ResponseEntity。
@@ -71,7 +73,6 @@ public class BankInfoController {
             @RequestParam("endMonth") String endMonthStr) {
         try {
             YearMonth startYearMonth = YearMonth.parse(startMonthStr);
-            // *** 修正了這裡的拼字錯誤 ***
             YearMonth endYearMonth = YearMonth.parse(endMonthStr);
 
             LocalDate startDate = startYearMonth.atDay(1);
@@ -84,7 +85,6 @@ public class BankInfoController {
 
             HttpHeaders headers = new HttpHeaders();
             String filename = String.format("BankInfo-%s-to-%s.xlsx", startMonthStr, endMonthStr);
-            // 處理非 ASCII 檔名，使其在瀏覽器中能正確顯示
             String encodedFilename = new String(filename.getBytes("UTF-8"), "ISO-8859-1");
             headers.add("Content-Disposition", "attachment; filename=" + encodedFilename);
 
@@ -94,10 +94,9 @@ public class BankInfoController {
                     .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                     .body(new InputStreamResource(in));
 
-        } catch (IOException e) {
-            return ResponseEntity.status(500).build();
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            // 如果匯出失敗，回傳 500 伺服器內部錯誤
+            return ResponseEntity.status(500).build();
         }
     }
 }
