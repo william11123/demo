@@ -10,9 +10,13 @@ import java.util.List;
 @Service
 public class BankInfoService {
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    
+    private final JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    public BankInfoService(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
     /**
      * 擷取所有符合條件的銀行資訊，用於匯出。
      * @param startDate 開始日期
@@ -20,7 +24,6 @@ public class BankInfoService {
      * @return 包含所有符合條件的銀行資訊列表
      */
     public List<BankInfoDTO> getBankInfoForExport(String startDate, String endDate) {
-        // 您的原生 SQL 查詢，這裡不作任何筆數限制
         String sql = "WITH RankedResults AS (" +
             "    SELECT " +
             "        CONCAT(t_o.CustomNo,'.',c.NickName) AS bankname, " +
