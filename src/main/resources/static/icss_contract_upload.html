@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>合約資料匯入</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', ***REMOVED***ns-serif;
+        }
+        .mes***REMOVED***ge-list li {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .btn-di***REMOVED***bled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-2xl">
+        <div class="bg-white rounded-2xl shadow-lg p-8">
+            <h1 class="text-3xl font-bold mb-2 text-gray-800">合約資料匯入</h1>
+            <p class="text-gray-500 mb-8">請選擇包含合約資料的 Excel 檔案 (.xls 或 .xlsx)，然後點擊匯入按鈕。</p>
+
+            <div class="space-y-6">
+                <!-- 檔案選擇區域 -->
+                <div>
+                    <label for="contractFile" class="block mb-2 text-sm font-medium text-gray-700">上傳檔案</label>
+                    <input type="file" id="contractFile" name="file" accept=".xls,.xlsx" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none file:bg-gray-200 file:text-gray-700 file:border-0 file:px-4 file:py-3 file:mr-4 file:font-semibold">
+                </div>
+
+                <!-- 匯入按鈕 -->
+                <button id="importBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-5 rounded-lg transition duration-300 ease-in-out flex items-center justify-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span>匯入資料</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 訊息提示區 -->
+        <div id="mes***REMOVED***geArea" class="mt-6 bg-white rounded-2xl shadow-lg p-8" style="display: none;">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">匯入結果</h2>
+            <ul id="mes***REMOVED***geList" class="mes***REMOVED***ge-list space-y-2">
+                <!-- 匯入訊息將會動態插入此處 -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('contractFile');
+        const importBtn = document.getElementById('importBtn');
+        const mes***REMOVED***geArea = document.getElementById('mes***REMOVED***geArea');
+        const mes***REMOVED***geList = document.getElementById('mes***REMOVED***geList');
+
+        // 點擊匯入按鈕的事件處理
+        importBtn.addEventListener('click', async () => {
+            // 1. 檢查是否有選擇檔案
+            if (fileInput.files.length === 0) {
+                alert('請先選擇一個 Excel 檔案。');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // 2. 禁用按鈕並顯示載入中動畫
+            setButtonLoading(true);
+            mes***REMOVED***geArea.style.display = 'none';
+            mes***REMOVED***geList.innerHTML = '';
+
+            try {
+                // 3. 發送 POST 請求到後端 API
+                const response = await fetch('/api/icss-contracts/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                // 4. 處理後端回傳的結果
+                const resultMes***REMOVED***ges = await response.json();
+                mes***REMOVED***geArea.style.display = 'block';
+
+                if (Array.isArray(resultMes***REMOVED***ges) && resultMes***REMOVED***ges.length > 0) {
+                    resultMes***REMOVED***ges.forEach(msg => {
+                        appendMes***REMOVED***ge(msg);
+                    });
+                } else {
+                    appendMes***REMOVED***ge('後端未回傳任何處理訊息。', 'warning');
+                }
+
+            } catch (error) {
+                console.error('上傳過程中發生錯誤:', error);
+                mes***REMOVED***geArea.style.display = 'block';
+                appendMes***REMOVED***ge('上傳失敗，客戶端發生錯誤，請檢查主控台。', 'error');
+            } finally {
+                // 5. 無論成功或失敗，都恢復按鈕狀態
+                setButtonLoading(false);
+            }
+        });
+
+        // 動態新增訊息到列表的輔助函式
+        function appendMes***REMOVED***ge(mes***REMOVED***ge, type) {
+            const li = document.createElement('li');
+            li.textContent = mes***REMOVED***ge;
+
+            // 根據訊息內容決定樣式
+            let mes***REMOVED***geType = type;
+            if (!mes***REMOVED***geType) {
+                if (mes***REMOVED***ge.includes('成功')) {
+                    mes***REMOVED***geType = 'success';
+                } else if (mes***REMOVED***ge.includes('警告')) {
+                    mes***REMOVED***geType = 'warning';
+                } else if (mes***REMOVED***ge.includes('錯誤')) {
+                    mes***REMOVED***geType = 'error';
+                } else {
+                    mes***REMOVED***geType = 'info';
+                }
+            }
+            
+            const colors = {
+                success: 'bg-green-100 text-green-800 border-green-400',
+                warning: 'bg-yellow-100 text-yellow-800 border-yellow-400',
+                error: 'bg-red-100 text-red-800 border-red-400',
+                info: 'bg-blue-100 text-blue-800 border-blue-400',
+            };
+            
+            li.className = `p-4 rounded-lg border-l-4 ${colors[mes***REMOVED***geType]}`;
+            mes***REMOVED***geList.appendChild(li);
+        }
+
+        // 設定按鈕載入狀態的輔助函式
+        function setButtonLoading(isLoading) {
+            const buttonText = importBtn.querySelector('span');
+            if (isLoading) {
+                importBtn.di***REMOVED***bled = true;
+                importBtn.classList.add('btn-di***REMOVED***bled');
+                buttonText.textContent = '匯入中...';
+                // 移除 SVG 並加入 loader
+                const svg = importBtn.querySelector('svg');
+                if (svg) svg.style.display = 'none';
+                if (!importBtn.querySelector('.loader')) {
+                    const loader = document.createElement('div');
+                    loader.className = 'loader';
+                    importBtn.prepend(loader);
+                }
+            } else {
+                importBtn.di***REMOVED***bled = false;
+                importBtn.classList.remove('btn-di***REMOVED***bled');
+                buttonText.textContent = '匯入資料';
+                // 移除 loader 並顯示 SVG
+                const loader = importBtn.querySelector('.loader');
+                if (loader) loader.remove();
+                const svg = importBtn.querySelector('svg');
+                if (svg) svg.style.display = 'block';
+            }
+        }
+    </script>
+
+</body>
+</html>
