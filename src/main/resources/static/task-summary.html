@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>銀行每月派工案件量</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div class="w-full max-w-2xl mx-auto p-8 bg-white rounded-lg shadow-xl">
+        <h1 class="text-2xl font-bold mb-6 text-center text-gray-700">銀行每月派工案件量</h1>
+
+        <div class="space-y-6">
+            <!-- 時間區段 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="startDate" class="block text-sm font-medium text-gray-700 mb-1">開始月份</label>
+                    <input type="month" id="startDate" name="startDate" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <label for="endDate" class="block text-sm font-medium text-gray-700 mb-1">結束月份(到31日)</label>
+                    <input type="month" id="endDate" name="endDate" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+            </div>
+
+            <!-- 作業類別 -->
+            <div>
+                <label for="taskType" class="block text-sm font-medium text-gray-700 mb-1">作業類別</label>
+                <select id="taskType" name="taskType" class="w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="all">全部</option>
+                    <option value="1">安裝</option>
+                    <option value="2">回收</option>
+                    <option value="3">維修</option>
+                    <option value="4">共用</option>
+                    <option value="88">共用88</option>
+                </select>
+            </div>
+
+            <!-- 銀行編號 -->
+            <div>
+                <label for="customNo" class="block text-sm font-medium text-gray-700 mb-1">銀行編號 (可選)</label>
+                <input type="text" id="customNo" name="customNo" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="例如：02">
+            </div>
+
+            <!-- 匯出按鈕 -->
+            <div>
+                <button onclick="exportExcel()" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-300">
+                    匯出 Excel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function exportExcel() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            const taskType = document.getElementById('taskType').value;
+            const customNo = document.getElementById('customNo').value;
+
+            // 檢查必填欄位
+            if (!startDate || !endDate) {
+                alert('請選擇開始和結束月份！');
+                return;
+            }
+
+            // 建立查詢參數
+            const params = new URLSearchParams();
+            params.append('startDate', startDate);
+            params.append('endDate', endDate);
+            params.append('taskType', taskType);
+            if (customNo) {
+                params.append('customNo', customNo);
+            }
+
+            // 觸發下載
+            window.location.href = `/export-task-summary?${params.toString()}`;
+        }
+    </script>
+</body>
+</html>
