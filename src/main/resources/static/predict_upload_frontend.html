@@ -13,7 +13,7 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, ***REMOVED***ns-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
             color: #e0e6ed;
             min-height: 100vh;
@@ -241,7 +241,7 @@
         }
 
         /* 訊息區域 */
-        #mes***REMOVED***ges, #exportMes***REMOVED***ges, #searchResults {
+        #messages, #exportMessages, #searchResults {
             margin-top: 20px;
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -251,12 +251,12 @@
             backdrop-filter: blur(10px);
         }
 
-        #mes***REMOVED***ges ul, #exportMes***REMOVED***ges ul, #searchResults ul {
+        #messages ul, #exportMessages ul, #searchResults ul {
             list-style-type: none;
             padding: 0;
         }
 
-        #mes***REMOVED***ges li, #exportMes***REMOVED***ges li, #searchResults li {
+        #messages li, #exportMessages li, #searchResults li {
             padding: 8px 12px;
             margin: 5px 0;
             border-radius: 5px;
@@ -312,7 +312,7 @@
         }
 
         /* 隱藏的標題動畫 */
-        #uploadMes***REMOVED***gesTitle {
+        #uploadMessagesTitle {
             color: #00d4ff;
             font-weight: 600;
             text-transform: uppercase;
@@ -404,8 +404,8 @@
             <div class="button-group">
                 <button onclick="uploadExcel()">上傳檔案</button>
             </div>
-            <div id="uploadMes***REMOVED***gesTitle" style="margin-top: 15px; font-weight: bold; display: none;">匯入結果</div>
-            <div id="mes***REMOVED***ges">
+            <div id="uploadMessagesTitle" style="margin-top: 15px; font-weight: bold; display: none;">匯入結果</div>
+            <div id="messages">
                 <ul></ul>
             </div>
         </section>
@@ -454,33 +454,33 @@
                 <button onclick="search()">查詢資料</button>
             </div>
             
-            <div id="exportMes***REMOVED***ges"><ul></ul></div>
+            <div id="exportMessages"><ul></ul></div>
             <div id="searchResults"><ul></ul></div>
         </section>
 
     </div>
 
     <script>
-        const mes***REMOVED***gesDiv = document.getElementById('mes***REMOVED***ges').getElementsByTagName('ul')[0];
-        const uploadMes***REMOVED***gesTitle = document.getElementById('uploadMes***REMOVED***gesTitle');
-        const exportMes***REMOVED***gesDiv = document.getElementById('exportMes***REMOVED***ges').getElementsByTagName('ul')[0];
+        const messagesDiv = document.getElementById('messages').getElementsByTagName('ul')[0];
+        const uploadMessagesTitle = document.getElementById('uploadMessagesTitle');
+        const exportMessagesDiv = document.getElementById('exportMessages').getElementsByTagName('ul')[0];
 
         async function uploadExcel() {
             const fileInput = document.getElementById('excelFile');
             const uploadButton = fileInput.parentElement.parentElement.querySelector('button');
             
-            mes***REMOVED***gesDiv.innerHTML = '';
-            uploadMes***REMOVED***gesTitle.style.display = 'none';
+            messagesDiv.innerHTML = '';
+            uploadMessagesTitle.style.display = 'none';
 
             if (fileInput.files.length === 0) {
-                appendMes***REMOVED***ge(mes***REMOVED***gesDiv, '請先選擇一個檔案。', 'error');
-                uploadMes***REMOVED***gesTitle.style.display = 'block';
+                appendMessage(messagesDiv, '請先選擇一個檔案。', 'error');
+                uploadMessagesTitle.style.display = 'block';
                 return;
             }
 
             // 添加載入動畫
             uploadButton.classList.add('loading');
-            uploadButton.di***REMOVED***bled = true;
+            uploadButton.disabled = true;
 
             const file = fileInput.files[0];
             const formData = new FormData();
@@ -492,44 +492,44 @@
                     body: formData,
                 });
 
-                uploadMes***REMOVED***gesTitle.style.display = 'block';
-                const resultMes***REMOVED***ges = await response.json();
+                uploadMessagesTitle.style.display = 'block';
+                const resultMessages = await response.json();
 
                 if (response.ok || response.status === 207) {
-                    if (Array.isArray(resultMes***REMOVED***ges)) {
-                        resultMes***REMOVED***ges.forEach(msg => {
+                    if (Array.isArray(resultMessages)) {
+                        resultMessages.forEach(msg => {
                             let type = 'info';
                             if (msg.startsWith('錯誤')) type = 'error';
                             else if (msg.startsWith('警告')) type = 'warning';
                             else if (msg.startsWith('成功')) type = 'success';
-                            appendMes***REMOVED***ge(mes***REMOVED***gesDiv, msg, type);
+                            appendMessage(messagesDiv, msg, type);
                         });
                     } else {
-                        appendMes***REMOVED***ge(mes***REMOVED***gesDiv, '收到的回應格式不正確。', 'error');
+                        appendMessage(messagesDiv, '收到的回應格式不正確。', 'error');
                     }
                 } else {
-                    if (resultMes***REMOVED***ges && Array.isArray(resultMes***REMOVED***ges) && resultMes***REMOVED***ges.length > 0) {
-                         resultMes***REMOVED***ges.forEach(msg => appendMes***REMOVED***ge(mes***REMOVED***gesDiv, msg, 'error'));
-                    } else if (resultMes***REMOVED***ges && resultMes***REMOVED***ges.mes***REMOVED***ge) {
-                        appendMes***REMOVED***ge(mes***REMOVED***gesDiv, `上傳失敗: ${resultMes***REMOVED***ges.mes***REMOVED***ge} (狀態碼: ${response.status})`, 'error');
+                    if (resultMessages && Array.isArray(resultMessages) && resultMessages.length > 0) {
+                         resultMessages.forEach(msg => appendMessage(messagesDiv, msg, 'error'));
+                    } else if (resultMessages && resultMessages.message) {
+                        appendMessage(messagesDiv, `上傳失敗: ${resultMessages.message} (狀態碼: ${response.status})`, 'error');
                     } else {
-                        appendMes***REMOVED***ge(mes***REMOVED***gesDiv, `上傳失敗，狀態碼: ${response.status}`, 'error');
+                        appendMessage(messagesDiv, `上傳失敗，狀態碼: ${response.status}`, 'error');
                     }
                 }
             } catch (error) {
-                uploadMes***REMOVED***gesTitle.style.display = 'block';
+                uploadMessagesTitle.style.display = 'block';
                 console.error('上傳過程中發生錯誤:', error);
-                appendMes***REMOVED***ge(mes***REMOVED***gesDiv, `客戶端錯誤: ${error.mes***REMOVED***ge}`, 'error');
+                appendMessage(messagesDiv, `客戶端錯誤: ${error.message}`, 'error');
             } finally {
                 // 移除載入動畫
                 uploadButton.classList.remove('loading');
-                uploadButton.di***REMOVED***bled = false;
+                uploadButton.disabled = false;
             }
         }
 
-        function appendMes***REMOVED***ge(targetDiv, mes***REMOVED***ge, type = 'info') {
+        function appendMessage(targetDiv, message, type = 'info') {
             const listItem = document.createElement('li');
-            listItem.textContent = mes***REMOVED***ge;
+            listItem.textContent = message;
             listItem.className = type;
             targetDiv.appendChild(listItem);
         }
@@ -540,7 +540,7 @@
             
             searchDiv.innerHTML = '';
             searchButton.classList.add('loading');
-            searchButton.di***REMOVED***bled = true;
+            searchButton.disabled = true;
 
             const customNo = document.getElementById('exportCustomNo').value;
             const taskType = document.getElementById('exportTaskType').value;
@@ -563,28 +563,28 @@
                     const results = await response.json();
                     if (Array.isArray(results) && results.length > 0) {
                         results.forEach(record => {
-                            appendMes***REMOVED***ge(searchDiv, 
+                            appendMessage(searchDiv, 
                                 `CustomNo: ${record.customNo}, TaskType: ${record.taskType}, InMonth: ${record.inMonth}, Income: ${record.income}`, 
                                 'info');
                         });
                     } else {
-                        appendMes***REMOVED***ge(searchDiv, '沒有找到符合條件的記錄', 'warning');
+                        appendMessage(searchDiv, '沒有找到符合條件的記錄', 'warning');
                     }
                 } else {
-                    appendMes***REMOVED***ge(searchDiv, `查詢失敗，狀態碼: ${response.status}`, 'error');
+                    appendMessage(searchDiv, `查詢失敗，狀態碼: ${response.status}`, 'error');
                 }
             } catch (error) {
-                appendMes***REMOVED***ge(searchDiv, `查詢錯誤: ${error.mes***REMOVED***ge}`, 'error');
+                appendMessage(searchDiv, `查詢錯誤: ${error.message}`, 'error');
             } finally {
                 searchButton.classList.remove('loading');
-                searchButton.di***REMOVED***bled = false;
+                searchButton.disabled = false;
             }
         }
 
         async function createManualRecord() {
             const button = document.querySelector('button[onclick="createManualRecord()"]');
             button.classList.add('loading');
-            button.di***REMOVED***bled = true;
+            button.disabled = true;
 
             console.log("createManualRecord function called");
             const customNo = document.getElementById('manualCustomNo').value;
@@ -599,7 +599,7 @@
             if (!customNo || income === ''||!taskType||!inMonth) {
                 resultDiv.innerHTML = '<span class="error">CustomNo 和 Income 和 TaskType 和 InMonth 為必填欄位。</span>';
                 button.classList.remove('loading');
-                button.di***REMOVED***bled = false;
+                button.disabled = false;
                 return;
             }
 
@@ -633,41 +633,41 @@
                     document.getElementById('manualInMonth').value = '';
                     document.getElementById('manualIncome').value = '';
                 } else {
-                    let errorMes***REMOVED***ge = `建立記錄失敗，狀態碼: ${response.status}`;
+                    let errorMessage = `建立記錄失敗，狀態碼: ${response.status}`;
                     const errorText = await response.text();
                     console.log("Error body from server (raw text):", errorText);
 
                     if (errorText && errorText.trim() !== '') {
                         try {
                             const errorBodyJson = JSON.parse(errorText);
-                            if (errorBodyJson && errorBodyJson.mes***REMOVED***ge) {
-                                errorMes***REMOVED***ge += ` - ${errorBodyJson.mes***REMOVED***ge}`;
+                            if (errorBodyJson && errorBodyJson.message) {
+                                errorMessage += ` - ${errorBodyJson.message}`;
                             } else {
-                                errorMes***REMOVED***ge += ` - ${errorText}`;
+                                errorMessage += ` - ${errorText}`;
                             }
                         } catch (jsonError) {
-                            errorMes***REMOVED***ge += ` - ${errorText}`;
+                            errorMessage += ` - ${errorText}`;
                         }
                     }
 
-                    resultDiv.innerHTML = `<span class="error">${errorMes***REMOVED***ge}</span>`;
-                    console.error("Error creating record:", errorMes***REMOVED***ge);
+                    resultDiv.innerHTML = `<span class="error">${errorMessage}</span>`;
+                    console.error("Error creating record:", errorMessage);
                 }
             } catch (error) {
                 console.error('建立記錄過程中發生客戶端錯誤:', error);
-                resultDiv.innerHTML = `<span class="error">客戶端錯誤: ${error.mes***REMOVED***ge}</span>`;
+                resultDiv.innerHTML = `<span class="error">客戶端錯誤: ${error.message}</span>`;
             } finally {
                 button.classList.remove('loading');
-                button.di***REMOVED***bled = false;
+                button.disabled = false;
             }
         }
 
         async function exportToExcel() {
             const exportButton = document.querySelector('button[onclick="exportToExcel()"]');
             exportButton.classList.add('loading');
-            exportButton.di***REMOVED***bled = true;
+            exportButton.disabled = true;
 
-            exportMes***REMOVED***gesDiv.innerHTML = '';
+            exportMessagesDiv.innerHTML = '';
 
             const customNo = document.getElementById('exportCustomNo').value;
             const taskType = document.getElementById('exportTaskType').value;
@@ -681,7 +681,7 @@
             const queryString = queryParams.toString();
             const exportUrl = `/api/predict-uploads/export${queryString ? '?' + queryString : ''}`;
 
-            appendMes***REMOVED***ge(exportMes***REMOVED***gesDiv, `準備從以下網址匯出: ${exportUrl}`, 'info');
+            appendMessage(exportMessagesDiv, `準備從以下網址匯出: ${exportUrl}`, 'info');
 
             try {
                 const response = await fetch(exportUrl, {
@@ -707,13 +707,13 @@
                     a.click();
                     a.remove();
                     window.URL.revokeObjectURL(downloadUrl);
-                    appendMes***REMOVED***ge(exportMes***REMOVED***gesDiv, `成功觸發下載: ${filename}`, 'success');
+                    appendMessage(exportMessagesDiv, `成功觸發下載: ${filename}`, 'success');
                 } else {
                     let errorMsg = `匯出失敗，狀態碼: ${response.status}`;
                     try {
                         const errorData = await response.json();
-                        if (errorData && errorData.mes***REMOVED***ge) {
-                            errorMsg += ` - ${errorData.mes***REMOVED***ge}`;
+                        if (errorData && errorData.message) {
+                            errorMsg += ` - ${errorData.message}`;
                         } else if (errorData) {
                             errorMsg += ` - ${JSON.stringify(errorData)}`;
                         }
@@ -723,15 +723,15 @@
                              errorMsg += ` - ${textError}`;
                         }
                     }
-                    appendMes***REMOVED***ge(exportMes***REMOVED***gesDiv, errorMsg, 'error');
+                    appendMessage(exportMessagesDiv, errorMsg, 'error');
                     console.error('匯出錯誤:', errorMsg);
                 }
             } catch (error) {
                 console.error('匯出過程中發生客戶端錯誤:', error);
-                appendMes***REMOVED***ge(exportMes***REMOVED***gesDiv, `客戶端錯誤: ${error.mes***REMOVED***ge}`, 'error');
+                appendMessage(exportMessagesDiv, `客戶端錯誤: ${error.message}`, 'error');
             } finally {
                 exportButton.classList.remove('loading');
-                exportButton.di***REMOVED***bled = false;
+                exportButton.disabled = false;
             }
         }
     </script>

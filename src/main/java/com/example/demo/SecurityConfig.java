@@ -57,7 +57,7 @@ public class SecurityConfig {
                 logout
                     .permitAll()
             )
-            .csrf(csrf -> csrf.di***REMOVED***ble())
+            .csrf(csrf -> csrf.disable())
             .userDetailsService(userDetailsService()); // <--- 確保這裡使用了您定義的 userDetailsService Bean  
         return http.build();
     }

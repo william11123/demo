@@ -50,19 +50,19 @@ public class ICSSContractController {
         try {
             logger.info("開始處理合約匯入，檔案名稱：{}", file.getOriginalFilename());
             // 呼叫 Service 層的核心方法來處理檔案
-            List<String> mes***REMOVED***ges = icssContractService.importContractsFromExcel(file);
+            List<String> messages = icssContractService.importContractsFromExcel(file);
             
             // 檢查是否有任何錯誤訊息，以決定 HTTP 狀態碼
-            boolean hasErrors = mes***REMOVED***ges.stream().anyMatch(msg -> msg.toLowerCase().contains("錯誤"));
+            boolean hasErrors = messages.stream().anyMatch(msg -> msg.toLowerCase().contains("錯誤"));
             
             if (hasErrors) {
                 logger.warn("檔案 {} 匯入完成，但包含錯誤。", file.getOriginalFilename());
                 // 使用 207 Multi-Status 表示部分成功部分失敗
-                return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(mes***REMOVED***ges);
+                return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(messages);
             }
             
             logger.info("檔案 {} 已成功匯入。", file.getOriginalFilename());
-            return ResponseEntity.ok(mes***REMOVED***ges);
+            return ResponseEntity.ok(messages);
 
         } catch (Exception e) {
             logger.error("處理檔案 {} 時發生未預期的嚴重錯誤。", file.getOriginalFilename(), e);

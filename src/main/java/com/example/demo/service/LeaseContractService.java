@@ -50,7 +50,7 @@ public class LeaseContractService {
                     when t.CustomNo = '43' then '5'
                     when t.customno = '108'  and r.RequestDate >= '2023-01-01' then '5'
                     else jod.SafeYear
-                end as ***REMOVED***veyear,
+                end as saveyear,
                 r.RequestDate,
                 t.tono,
                 COALESCE(trtd.ChangeSN, trtd.RealSN) as sn
@@ -90,7 +90,7 @@ public class LeaseContractService {
                     when t.CustomNo = '43' then '5'
                     when t.customno = '108'  and r.RequestDate >= '2023-01-01' then '5'
                     else jod.SafeYear
-                end as ***REMOVED***veyear,
+                end as saveyear,
                 r.RequestDate,
                 t.tono,
                 COALESCE(trtd.ChangeSN, trtd.RealSN) as sn
@@ -148,7 +148,7 @@ public class LeaseContractService {
                     WHEN t.customno = '71' THEN '5'
                     WHEN t.CustomNo = '13' THEN '13'
                     ELSE jod.SafeYear
-                END AS ***REMOVED***veyear,
+                END AS saveyear,
                 r.RequestDate,
                 t.tono,
                 COALESCE(trtd.ChangeSN, trtd.RealSN) AS sn
@@ -203,7 +203,7 @@ public class LeaseContractService {
             rs.getString("CompDate"),
             rs.getString("iscomp"),
             rs.getString("prjno"),
-            rs.getString("***REMOVED***veyear"),
+            rs.getString("saveyear"),
             rs.getString("RequestDate"),
             rs.getString("tono"),
             rs.getString("sn")

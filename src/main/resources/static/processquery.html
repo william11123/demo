@@ -6,7 +6,7 @@
     <title>處理查詢</title>
     <style>
         body {
-            font-family: Arial, ***REMOVED***ns-serif;
+            font-family: Arial, sans-serif;
             margin: 20px;
             background-color: #f4f4f4;
             color: #333;
@@ -106,7 +106,7 @@
                 </tbody>
             </table>
         </div>
-        <div id="errorMes***REMOVED***ge" class="error" style="margin-top:10px;"></div>
+        <div id="errorMessage" class="error" style="margin-top:10px;"></div>
     </div>
 
     <script>
@@ -114,16 +114,16 @@
             const queryValue = document.getElementById('queryValue').value;
             const resultsTableContainer = document.getElementById('resultsTableContainer');
             const resultsTableBody = document.getElementById('resultsTableBody');
-            const errorMes***REMOVED***geDiv = document.getElementById('errorMes***REMOVED***ge');
+            const errorMessageDiv = document.getElementById('errorMessage');
             const loadingDiv = document.getElementById('loading');
 
             // 清空之前的結果和錯誤訊息
             resultsTableBody.innerHTML = '';
-            errorMes***REMOVED***geDiv.textContent = '';
+            errorMessageDiv.textContent = '';
             resultsTableContainer.style.display = 'none';
 
             if (!queryValue.trim()) {
-                errorMes***REMOVED***geDiv.textContent = '請輸入查詢 SN 值。';
+                errorMessageDiv.textContent = '請輸入查詢 SN 值。';
                 return;
             }
 
@@ -138,9 +138,9 @@
 
                 if (!response.ok) {
                     if (response.status === 400) {
-                        errorMes***REMOVED***geDiv.textContent = '查詢參數錯誤或為空，請檢查輸入。';
+                        errorMessageDiv.textContent = '查詢參數錯誤或為空，請檢查輸入。';
                     } else {
-                        errorMes***REMOVED***geDiv.textContent = `查詢失敗，狀態碼：${response.status}`;
+                        errorMessageDiv.textContent = `查詢失敗，狀態碼：${response.status}`;
                     }
                     return;
                 }
@@ -172,13 +172,13 @@
                         cellDetails.innerHTML = detailsHtml;
                     });
                 } else {
-                    errorMes***REMOVED***geDiv.textContent = '找不到符合條件的資料。';
+                    errorMessageDiv.textContent = '找不到符合條件的資料。';
                 }
 
             } catch (error) {
                 loadingDiv.style.display = 'none';
                 console.error('查詢過程中發生錯誤:', error);
-                errorMes***REMOVED***geDiv.textContent = '查詢過程中發生錯誤，請檢查主控台或網路連線。';
+                errorMessageDiv.textContent = '查詢過程中發生錯誤，請檢查主控台或網路連線。';
             }
         }
     </script>

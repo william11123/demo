@@ -6,7 +6,7 @@
     <title>匯入 Excel 更新 BankIncome</title>
     <style>
         body {
-            font-family: Arial, ***REMOVED***ns-serif;
+            font-family: Arial, sans-serif;
             margin: 20px;
             background-color: #f4f4f4;
             color: #333;
@@ -44,7 +44,7 @@
         button:hover {
             background-color: #0056b3;
         }
-        #mes***REMOVED***ges {
+        #messages {
             margin-top: 20px;
             padding: 10px;
             border: 1px solid #eee;
@@ -54,11 +54,11 @@
             max-height: 300px;
             overflow-y: auto;
         }
-        .mes***REMOVED***ge-item {
+        .message-item {
             padding: 5px 0;
             border-bottom: 1px solid #eee;
         }
-        .mes***REMOVED***ge-item:last-child {
+        .message-item:last-child {
             border-bottom: none;
         }
         .success {
@@ -85,10 +85,10 @@
             <button type="submit">上傳並更新</button>
         </form>
 
-        <div id="mes***REMOVED***gesTitle" style="display:none;">
+        <div id="messagesTitle" style="display:none;">
             <h2>處理結果：</h2>
         </div>
-        <div id="mes***REMOVED***ges"></div>
+        <div id="messages"></div>
     </div>
 
     <script>
@@ -96,14 +96,14 @@
             event.preventDefault(); // 防止表單傳統提交
 
             const fileInput = document.getElementById('excelFile');
-            const mes***REMOVED***gesDiv = document.getElementById('mes***REMOVED***ges');
-            const mes***REMOVED***gesTitleDiv = document.getElementById('mes***REMOVED***gesTitle');
-            mes***REMOVED***gesDiv.innerHTML = ''; // 清空之前的訊息
-            mes***REMOVED***gesTitleDiv.style.display = 'none';
+            const messagesDiv = document.getElementById('messages');
+            const messagesTitleDiv = document.getElementById('messagesTitle');
+            messagesDiv.innerHTML = ''; // 清空之前的訊息
+            messagesTitleDiv.style.display = 'none';
 
             if (!fileInput.files.length) {
-                mes***REMOVED***gesDiv.innerHTML = '<p class="error">請先選擇一個檔案。</p>';
-                mes***REMOVED***gesTitleDiv.style.display = 'block';
+                messagesDiv.innerHTML = '<p class="error">請先選擇一個檔案。</p>';
+                messagesTitleDiv.style.display = 'block';
                 return;
             }
 
@@ -119,14 +119,14 @@
                     // 不需要手動設定 headers 中的 Content-Type
                 });
 
-                const resultMes***REMOVED***ges = await response.json();
-                mes***REMOVED***gesTitleDiv.style.display = 'block';
+                const resultMessages = await response.json();
+                messagesTitleDiv.style.display = 'block';
 
-                if (resultMes***REMOVED***ges && resultMes***REMOVED***ges.length > 0) {
-                    resultMes***REMOVED***ges.forEach(msg => {
+                if (resultMessages && resultMessages.length > 0) {
+                    resultMessages.forEach(msg => {
                         const p = document.createElement('p');
                         p.textContent = msg;
-                        p.classList.add('mes***REMOVED***ge-item');
+                        p.classList.add('message-item');
                         if (msg.toLowerCase().includes('成功')) {
                             p.classList.add('success');
                         } else if (msg.toLowerCase().includes('警告')) {
@@ -134,24 +134,24 @@
                         } else if (msg.toLowerCase().includes('錯誤')) {
                             p.classList.add('error');
                         }
-                        mes***REMOVED***gesDiv.appendChild(p);
+                        messagesDiv.appendChild(p);
                     });
                 } else if (response.ok) {
-                     mes***REMOVED***gesDiv.innerHTML = '<p class="success">檔案已提交，但未收到具體處理訊息。</p>';
+                     messagesDiv.innerHTML = '<p class="success">檔案已提交，但未收到具體處理訊息。</p>';
                 } else {
-                    mes***REMOVED***gesDiv.innerHTML = `<p class="error">上傳失敗，狀態碼：${response.status}</p>`;
-                    if(resultMes***REMOVED***ges && typeof resultMes***REMOVED***ges === 'object' && resultMes***REMOVED***ges.mes***REMOVED***ge) {
-                         mes***REMOVED***gesDiv.innerHTML += `<p class="error">錯誤訊息：${resultMes***REMOVED***ges.mes***REMOVED***ge}</p>`;
-                    } else if (Array.isArray(resultMes***REMOVED***ges) && resultMes***REMOVED***ges.length > 0) {
+                    messagesDiv.innerHTML = `<p class="error">上傳失敗，狀態碼：${response.status}</p>`;
+                    if(resultMessages && typeof resultMessages === 'object' && resultMessages.message) {
+                         messagesDiv.innerHTML += `<p class="error">錯誤訊息：${resultMessages.message}</p>`;
+                    } else if (Array.isArray(resultMessages) && resultMessages.length > 0) {
                         // 已經在上面處理
                     } else {
-                         mes***REMOVED***gesDiv.innerHTML += `<p class="error">無法解析錯誤回應。</p>`;
+                         messagesDiv.innerHTML += `<p class="error">無法解析錯誤回應。</p>`;
                     }
                 }
             } catch (error) {
                 console.error('上傳過程中發生錯誤:', error);
-                mes***REMOVED***gesTitleDiv.style.display = 'block';
-                mes***REMOVED***gesDiv.innerHTML = `<p class="error">上傳過程中發生 JavaScript 錯誤：${error.mes***REMOVED***ge}</p>`;
+                messagesTitleDiv.style.display = 'block';
+                messagesDiv.innerHTML = `<p class="error">上傳過程中發生 JavaScript 錯誤：${error.message}</p>`;
             }
         });
     </script>

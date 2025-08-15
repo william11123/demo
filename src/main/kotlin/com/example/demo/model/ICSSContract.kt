@@ -37,7 +37,7 @@ class ICSSContract {
     var note: String? = null // 備註
 
     @Column(name = "Sales")
-    var ***REMOVED***les: String? = null
+    var sales: String? = null
 
     @Column(name = "SendMark")
     var sendMark: String? = null // 新增欄位

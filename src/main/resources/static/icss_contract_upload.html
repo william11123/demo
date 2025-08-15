@@ -8,9 +8,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', 'Noto Sans TC', ***REMOVED***ns-serif;
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
         }
-        .mes***REMOVED***ge-list li {
+        .message-list li {
             animation: fadeIn 0.5s ease-in-out;
         }
         @keyframes fadeIn {
@@ -23,7 +23,7 @@
                 transform: translateY(0);
             }
         }
-        .btn-di***REMOVED***bled {
+        .btn-disabled {
             cursor: not-allowed;
             opacity: 0.6;
         }
@@ -66,9 +66,9 @@
         </div>
 
         <!-- 訊息提示區 -->
-        <div id="mes***REMOVED***geArea" class="mt-6 bg-white rounded-2xl shadow-lg p-8" style="display: none;">
+        <div id="messageArea" class="mt-6 bg-white rounded-2xl shadow-lg p-8" style="display: none;">
             <h2 class="text-xl font-bold mb-4 text-gray-800">匯入結果</h2>
-            <ul id="mes***REMOVED***geList" class="mes***REMOVED***ge-list space-y-2">
+            <ul id="messageList" class="message-list space-y-2">
                 <!-- 匯入訊息將會動態插入此處 -->
             </ul>
         </div>
@@ -77,8 +77,8 @@
     <script>
         const fileInput = document.getElementById('contractFile');
         const importBtn = document.getElementById('importBtn');
-        const mes***REMOVED***geArea = document.getElementById('mes***REMOVED***geArea');
-        const mes***REMOVED***geList = document.getElementById('mes***REMOVED***geList');
+        const messageArea = document.getElementById('messageArea');
+        const messageList = document.getElementById('messageList');
 
         // 點擊匯入按鈕的事件處理
         importBtn.addEventListener('click', async () => {
@@ -94,8 +94,8 @@
 
             // 2. 禁用按鈕並顯示載入中動畫
             setButtonLoading(true);
-            mes***REMOVED***geArea.style.display = 'none';
-            mes***REMOVED***geList.innerHTML = '';
+            messageArea.style.display = 'none';
+            messageList.innerHTML = '';
 
             try {
                 // 3. 發送 POST 請求到後端 API
@@ -105,21 +105,21 @@
                 });
 
                 // 4. 處理後端回傳的結果
-                const resultMes***REMOVED***ges = await response.json();
-                mes***REMOVED***geArea.style.display = 'block';
+                const resultMessages = await response.json();
+                messageArea.style.display = 'block';
 
-                if (Array.isArray(resultMes***REMOVED***ges) && resultMes***REMOVED***ges.length > 0) {
-                    resultMes***REMOVED***ges.forEach(msg => {
-                        appendMes***REMOVED***ge(msg);
+                if (Array.isArray(resultMessages) && resultMessages.length > 0) {
+                    resultMessages.forEach(msg => {
+                        appendMessage(msg);
                     });
                 } else {
-                    appendMes***REMOVED***ge('後端未回傳任何處理訊息。', 'warning');
+                    appendMessage('後端未回傳任何處理訊息。', 'warning');
                 }
 
             } catch (error) {
                 console.error('上傳過程中發生錯誤:', error);
-                mes***REMOVED***geArea.style.display = 'block';
-                appendMes***REMOVED***ge('上傳失敗，客戶端發生錯誤，請檢查主控台。', 'error');
+                messageArea.style.display = 'block';
+                appendMessage('上傳失敗，客戶端發生錯誤，請檢查主控台。', 'error');
             } finally {
                 // 5. 無論成功或失敗，都恢復按鈕狀態
                 setButtonLoading(false);
@@ -127,21 +127,21 @@
         });
 
         // 動態新增訊息到列表的輔助函式
-        function appendMes***REMOVED***ge(mes***REMOVED***ge, type) {
+        function appendMessage(message, type) {
             const li = document.createElement('li');
-            li.textContent = mes***REMOVED***ge;
+            li.textContent = message;
 
             // 根據訊息內容決定樣式
-            let mes***REMOVED***geType = type;
-            if (!mes***REMOVED***geType) {
-                if (mes***REMOVED***ge.includes('成功')) {
-                    mes***REMOVED***geType = 'success';
-                } else if (mes***REMOVED***ge.includes('警告')) {
-                    mes***REMOVED***geType = 'warning';
-                } else if (mes***REMOVED***ge.includes('錯誤')) {
-                    mes***REMOVED***geType = 'error';
+            let messageType = type;
+            if (!messageType) {
+                if (message.includes('成功')) {
+                    messageType = 'success';
+                } else if (message.includes('警告')) {
+                    messageType = 'warning';
+                } else if (message.includes('錯誤')) {
+                    messageType = 'error';
                 } else {
-                    mes***REMOVED***geType = 'info';
+                    messageType = 'info';
                 }
             }
             
@@ -152,16 +152,16 @@
                 info: 'bg-blue-100 text-blue-800 border-blue-400',
             };
             
-            li.className = `p-4 rounded-lg border-l-4 ${colors[mes***REMOVED***geType]}`;
-            mes***REMOVED***geList.appendChild(li);
+            li.className = `p-4 rounded-lg border-l-4 ${colors[messageType]}`;
+            messageList.appendChild(li);
         }
 
         // 設定按鈕載入狀態的輔助函式
         function setButtonLoading(isLoading) {
             const buttonText = importBtn.querySelector('span');
             if (isLoading) {
-                importBtn.di***REMOVED***bled = true;
-                importBtn.classList.add('btn-di***REMOVED***bled');
+                importBtn.disabled = true;
+                importBtn.classList.add('btn-disabled');
                 buttonText.textContent = '匯入中...';
                 // 移除 SVG 並加入 loader
                 const svg = importBtn.querySelector('svg');
@@ -172,8 +172,8 @@
                     importBtn.prepend(loader);
                 }
             } else {
-                importBtn.di***REMOVED***bled = false;
-                importBtn.classList.remove('btn-di***REMOVED***bled');
+                importBtn.disabled = false;
+                importBtn.classList.remove('btn-disabled');
                 buttonText.textContent = '匯入資料';
                 // 移除 loader 並顯示 SVG
                 const loader = importBtn.querySelector('.loader');

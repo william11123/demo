@@ -7,8 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', 'Noto Sans TC', ***REMOVED***ns-serif; }
-        .btn-di***REMOVED***bled { cursor: not-allowed; opacity: 0.5; }
+        body { font-family: 'Inter', 'Noto Sans TC', sans-serif; }
+        .btn-disabled { cursor: not-allowed; opacity: 0.5; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen">
@@ -30,7 +30,7 @@
             </div>
 
             <!-- 訊息提示區 -->
-            <div id="mes***REMOVED***ge-area" class="mt-6 text-center h-6"></div>
+            <div id="message-area" class="mt-6 text-center h-6"></div>
 
             <button id="export-btn" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-5 rounded-lg transition duration-300 ease-in-out">
                 匯出 Excel
@@ -46,36 +46,36 @@
         const startMonthInput = document.getElementById('start-month-input');
         const endMonthInput = document.getElementById('end-month-input');
         const exportBtn = document.getElementById('export-btn');
-        const mes***REMOVED***geArea = document.getElementById('mes***REMOVED***ge-area');
+        const messageArea = document.getElementById('message-area');
 
-        function showMes***REMOVED***ge(mes***REMOVED***ge, isError = false) {
-            mes***REMOVED***geArea.textContent = mes***REMOVED***ge;
-            mes***REMOVED***geArea.className = isError ? 'text-center h-6 text-red-600' : 'text-center h-6 text-blue-600';
+        function showMessage(message, isError = false) {
+            messageArea.textContent = message;
+            messageArea.className = isError ? 'text-center h-6 text-red-600' : 'text-center h-6 text-blue-600';
         }
 
-        function clearMes***REMOVED***ge() {
-            mes***REMOVED***geArea.textContent = '';
+        function clearMessage() {
+            messageArea.textContent = '';
         }
 
         exportBtn.addEventListener('click', () => {
-            clearMes***REMOVED***ge();
+            clearMessage();
             const startMonth = startMonthInput.value;
             const endMonth = endMonthInput.value;
 
             // 1. 輸入驗證
             if (!startMonth || !endMonth) {
-                showMes***REMOVED***ge('請選擇開始和結束月份', true);
+                showMessage('請選擇開始和結束月份', true);
                 return;
             }
             if (startMonth > endMonth) {
-                showMes***REMOVED***ge('開始月份不能晚於結束月份', true);
+                showMessage('開始月份不能晚於結束月份', true);
                 return;
             }
 
             // 2. 顯示提示訊息並禁用按鈕
-            showMes***REMOVED***ge('正在準備匯出檔案，請稍候...');
-            exportBtn.di***REMOVED***bled = true;
-            exportBtn.classList.add('btn-di***REMOVED***bled');
+            showMessage('正在準備匯出檔案，請稍候...');
+            exportBtn.disabled = true;
+            exportBtn.classList.add('btn-disabled');
 
             // 3. 觸發下載
             window.location.href = `/api/bank-info/export?startMonth=${startMonth}&endMonth=${endMonth}`;
@@ -83,9 +83,9 @@
             // 4. 為了防止使用者在下載期間重複點擊，我們在短暫延遲後重新啟用按鈕。
             //    這是一個簡單的處理方式，因為我們無法確切知道下載何時開始或完成。
             setTimeout(() => {
-                clearMes***REMOVED***ge();
-                exportBtn.di***REMOVED***bled = false;
-                exportBtn.classList.remove('btn-di***REMOVED***bled');
+                clearMessage();
+                exportBtn.disabled = false;
+                exportBtn.classList.remove('btn-disabled');
             }, 5000); // 5秒後自動恢復按鈕功能
         });
     </script>

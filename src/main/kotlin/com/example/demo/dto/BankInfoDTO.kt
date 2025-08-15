@@ -8,7 +8,7 @@ data class BankInfoDTO(
     val bankname: String?,
     val nickName: String?,
     val addr: String?,
-    val ***REMOVED***leLia: String?,
+    val saleLia: String?,
     val tel1: String?,
     val tel2: String?,
     val compMonth: String?

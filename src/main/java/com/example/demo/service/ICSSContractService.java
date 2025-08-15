@@ -39,7 +39,7 @@ public class ICSSContractService {
      * @return 一個包含處理結果訊息的列表。
      */
     public List<String> importContractsFromExcel(MultipartFile file) {
-        List<String> mes***REMOVED***ges = new ArrayList<>();
+        List<String> messages = new ArrayList<>();
         try (InputStream inputStream = file.getInputStream()) {
             
             // 【更新2】: 動態偵測 .xls 和 .xlsx 檔案，並使用對應的 Workbook 實作。
@@ -50,8 +50,8 @@ public class ICSSContractService {
             } else if (fileName != null && fileName.toLowerCase().endsWith(".xlsx")) {
                 workbook = new XSSFWorkbook(inputStream); // 用於處理新版 .xlsx
             } else {
-                mes***REMOVED***ges.add("嚴重錯誤：不支援的檔案格式。請上傳 .xls 或 .xlsx 檔案。");
-                return mes***REMOVED***ges;
+                messages.add("嚴重錯誤：不支援的檔案格式。請上傳 .xls 或 .xlsx 檔案。");
+                return messages;
             }
 
             Sheet sheet = workbook.getSheetAt(0);
@@ -75,7 +75,7 @@ public class ICSSContractService {
                     String contractName = dataFormatter.formatCellValue(currentRow.getCell(2)).trim();
 
                     if (contractNo.isEmpty() && contractName.isEmpty()) {
-                        mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行的合約編號和合約名稱均為空，已跳過。");
+                        messages.add("警告：第 " + rowNumber + " 行的合約編號和合約名稱均為空，已跳過。");
                         continue;
                     }
 
@@ -95,25 +95,25 @@ public class ICSSContractService {
                     contract.setSales(dataFormatter.formatCellValue(currentRow.getCell(9)));
                     contract.setTermSalesMail(dataFormatter.formatCellValue(currentRow.getCell(10)));
 
-                    // 儲存到資料庫 (JPA 的 ***REMOVED***ve 方法會自動處理新增或更新)
-                    icssContractRepository.***REMOVED***ve(contract);
-                    mes***REMOVED***ges.add("成功：第 " + rowNumber + " 行的合約 [" + contractId.getContractNo() + " / " + contractId.getContractName() + "] 已成功匯入/更新。");
+                    // 儲存到資料庫 (JPA 的 save 方法會自動處理新增或更新)
+                    icssContractRepository.save(contract);
+                    messages.add("成功：第 " + rowNumber + " 行的合約 [" + contractId.getContractNo() + " / " + contractId.getContractName() + "] 已成功匯入/更新。");
 
                 } catch (Exception e) {
                     logger.error("處理第 " + rowNumber + " 行時發生錯誤", e);
-                    mes***REMOVED***ges.add("錯誤：處理第 " + rowNumber + " 行時失敗：" + e.getMes***REMOVED***ge());
+                    messages.add("錯誤：處理第 " + rowNumber + " 行時失敗：" + e.getMessage());
                 }
             }
-            if (mes***REMOVED***ges.isEmpty() && rowNumber > 1) {
-                 mes***REMOVED***ges.add("資訊：檔案已成功處理，但所有資料行都因格式問題被跳過。");
-            } else if (mes***REMOVED***ges.isEmpty()) {
-                mes***REMOVED***ges.add("資訊：檔案已成功處理，但未找到任何可匯入的資料行。");
+            if (messages.isEmpty() && rowNumber > 1) {
+                 messages.add("資訊：檔案已成功處理，但所有資料行都因格式問題被跳過。");
+            } else if (messages.isEmpty()) {
+                messages.add("資訊：檔案已成功處理，但未找到任何可匯入的資料行。");
             }
         } catch (Exception e) {
             logger.error("匯入 Excel 檔案時發生嚴重錯誤", e);
-            mes***REMOVED***ges.add("嚴重錯誤：無法處理 Excel 檔案。請檢查檔案格式是否正確。錯誤：" + e.getMes***REMOVED***ge());
+            messages.add("嚴重錯誤：無法處理 Excel 檔案。請檢查檔案格式是否正確。錯誤：" + e.getMessage());
         }
-        return mes***REMOVED***ges;
+        return messages;
     }
     
     /**

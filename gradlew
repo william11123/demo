@@ -79,11 +79,11 @@ do
     case $link in             #(
       /*)   app_path=$link ;; #(
       *)    app_path=$APP_HOME$link ;;
-    e***REMOVED***c
+    esac
 done
 
 # This is normally unused
-# shellcheck di***REMOVED***ble=SC2034
+# shellcheck disable=SC2034
 APP_BASE_NAME=${0##*/}
 # Discard cd standard output in case $CDPATH is set (https://github.com/gradle/gradle/issues/25036)
 APP_HOME=$( cd -P "${APP_HOME:-./}" > /dev/null && printf '%s\n' "$PWD" ) || exit
@@ -112,7 +112,7 @@ case "$( uname )" in                #(
   Darwin* )         darwin=true  ;; #(
   MSYS* | MINGW* )  msys=true    ;; #(
   NONSTOP* )        nonstop=true ;;
-e***REMOVED***c
+esac
 
 CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
 
@@ -147,18 +147,18 @@ if ! "$cygwin" && ! "$darwin" && ! "$nonstop" ; then
     case $MAX_FD in #(
       max*)
         # In POSIX sh, ulimit -H is undefined. That's why the result is checked to see if it worked.
-        # shellcheck di***REMOVED***ble=SC2039,SC3045
+        # shellcheck disable=SC2039,SC3045
         MAX_FD=$( ulimit -H -n ) ||
             warn "Could not query maximum file descriptor limit"
-    e***REMOVED***c
+    esac
     case $MAX_FD in  #(
       '' | soft) :;; #(
       *)
         # In POSIX sh, ulimit -n is undefined. That's why the result is checked to see if it worked.
-        # shellcheck di***REMOVED***ble=SC2039,SC3045
+        # shellcheck disable=SC2039,SC3045
         ulimit -n "$MAX_FD" ||
             warn "Could not set maximum file descriptor limit to $MAX_FD"
-    e***REMOVED***c
+    esac
 fi
 
 # Collect all arguments for the java command, stacking in reverse order:
@@ -184,7 +184,7 @@ if "$cygwin" || "$msys" ; then
               /?*)  t=${arg#/} t=/${t%%/*}              # looks like a POSIX filepath
                     [ -e "$t" ] ;;                      #(
               *)    false ;;
-            e***REMOVED***c
+            esac
         then
             arg=$( cygpath --path --ignore --mixed "$arg" )
         fi

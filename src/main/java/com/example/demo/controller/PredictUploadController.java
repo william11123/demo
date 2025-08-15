@@ -106,7 +106,7 @@ public class PredictUploadController {
             return new ResponseEntity<>(newPredictUpload, HttpStatus.CREATED);
         } catch (Exception e) {
             // 考慮更細緻的錯誤處理，例如，如果 customNo 已存在，服務層可以拋出特定例外
-            logger.error("建立 PredictUpload 記錄時發生錯誤: {}", e.getMes***REMOVED***ge(), e);
+            logger.error("建立 PredictUpload 記錄時發生錯誤: {}", e.getMessage(), e);
             // 這裡可以回傳更具體的錯誤訊息給客戶端，而不是通用的 INTERNAL_SERVER_ERROR
             // 例如，如果 customNo 重複，可以回傳 HttpStatus.CONFLICT
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -178,35 +178,35 @@ public class PredictUploadController {
         }
 
         try {
-            List<String> importMes***REMOVED***ges; // <--- 修改這裡，先宣告變數
+            List<String> importMessages; // <--- 修改這裡，先宣告變數
             if ("update_income".equalsIgnoreCase(mode)) {
                 logger.info("執行模式：上傳 Excel 並更新金額，檔案：{}", file.getOriginalFilename());
                 // 稍後我們會呼叫新的服務方法
-                importMes***REMOVED***ges = predictUploadService.importAndUpdateIncomeFromExcel(file); // <--- 假設服務層已有此方法
+                importMessages = predictUploadService.importAndUpdateIncomeFromExcel(file); // <--- 假設服務層已有此方法
             } else { // 預設行為或 mode = "import_new"
                 logger.info("執行模式：從 Excel 僅匯入新資料，檔案：{}", file.getOriginalFilename());
-                importMes***REMOVED***ges = predictUploadService.importPredictUploadsFromExcel(file);
+                importMessages = predictUploadService.importPredictUploadsFromExcel(file);
             }
             
             // 檢查是否有任何錯誤訊息，以決定 HTTP 狀態碼
-            // 注意：需要處理 importMes***REMOVED***ges 可能為 null 的情況，如果服務方法可能返回 null
+            // 注意：需要處理 importMessages 可能為 null 的情況，如果服務方法可能返回 null
             boolean hasErrors = false;
-            if (importMes***REMOVED***ges != null) {
-                hasErrors = importMes***REMOVED***ges.stream()
+            if (importMessages != null) {
+                hasErrors = importMessages.stream()
                                           .filter(msg -> msg != null) // 過濾掉 null 訊息
                                           .anyMatch(msg -> msg.toLowerCase().contains("錯誤"));
             }
 
             if (hasErrors) {
-                 return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(importMes***REMOVED***ges);
+                 return ResponseEntity.status(HttpStatus.MULTI_STATUS).body(importMessages);
             }
-            return ResponseEntity.ok(importMes***REMOVED***ges);
+            return ResponseEntity.ok(importMessages);
         } catch (IOException e) {
             logger.error("處理檔案時發生 IO 錯誤: {}", file.getOriginalFilename(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of("處理檔案時發生錯誤：" + e.getMes***REMOVED***ge()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of("處理檔案時發生錯誤：" + e.getMessage()));
         } catch (Exception e) {
             logger.error("匯入過程中發生未知錯誤: {}", file.getOriginalFilename(), e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of("匯入過程中發生未知錯誤：" + e.getMes***REMOVED***ge()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(List.of("匯入過程中發生未知錯誤：" + e.getMessage()));
         }
     }
 

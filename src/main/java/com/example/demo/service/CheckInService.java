@@ -59,7 +59,7 @@ public class CheckInService {
                 request.getLocationName(),
                 LocalDateTime.now()
             );
-            checkInRecordRepository.***REMOVED***ve(record);
+            checkInRecordRepository.save(record);
             return "簽到成功！已在 " + request.getLocationName() + " 記錄您的簽到。";
         } else {
             // 4. 如果不在範圍內，就回傳失敗訊息

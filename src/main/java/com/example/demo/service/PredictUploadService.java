@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.tran***REMOVED***ction.annotation.Tran***REMOVED***ctional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
@@ -59,16 +59,16 @@ public class PredictUploadService {
 
     @FunctionalInterface
     private interface ExcelRowProcessor {
-        void process(Row row, DataFormatter formatter, int rowNumber, List<String> mes***REMOVED***ges);
+        void process(Row row, DataFormatter formatter, int rowNumber, List<String> messages);
     }
 
     private List<String> processUploadedExcel(MultipartFile file, ExcelRowProcessor rowProcessor) throws IOException {
-        List<String> mes***REMOVED***ges = new ArrayList<>();
+        List<String> messages = new ArrayList<>();
         String originalFilename = file.getOriginalFilename();
 
         if (!isValidExcelFile(originalFilename)) {
-            mes***REMOVED***ges.add("錯誤：不支援的檔案格式。請上傳 .xls 或 .xlsx 檔案。");
-            return mes***REMOVED***ges;
+            messages.add("錯誤：不支援的檔案格式。請上傳 .xls 或 .xlsx 檔案。");
+            return messages;
         }
 
         try (InputStream inputStream = file.getInputStream();
@@ -76,8 +76,8 @@ public class PredictUploadService {
 
             Sheet sheet = workbook.getSheetAt(0);
             if (sheet == null) {
-                mes***REMOVED***ges.add("錯誤：Excel 檔案中找不到工作表。");
-                return mes***REMOVED***ges;
+                messages.add("錯誤：Excel 檔案中找不到工作表。");
+                return messages;
             }
             Iterator<Row> rowIterator = sheet.iterator();
             skipHeaderRow(rowIterator);
@@ -89,19 +89,19 @@ public class PredictUploadService {
                 Row currentRow = rowIterator.next();
                 rowNumber++; // 代表實際 Excel 中的行號
                 try {
-                    rowProcessor.process(currentRow, formatter, rowNumber, mes***REMOVED***ges);
+                    rowProcessor.process(currentRow, formatter, rowNumber, messages);
                 } catch (Exception e) {
-                    mes***REMOVED***ges.add("錯誤：處理第 " + rowNumber + " 行時發生未預期錯誤：" + e.getMes***REMOVED***ge());
+                    messages.add("錯誤：處理第 " + rowNumber + " 行時發生未預期錯誤：" + e.getMessage());
                     logger.error("Unexpected error processing row " + rowNumber + " for file " + originalFilename, e);
                 }
             }
         }
-        if (mes***REMOVED***ges.isEmpty() && file.getSize() > 0) { // 僅當檔案非空且無訊息時提示
-            mes***REMOVED***ges.add("資訊：檔案已處理，但沒有找到任何可操作的資料或所有資料行均不符合處理條件。");
-        } else if (mes***REMOVED***ges.isEmpty() && file.getSize() == 0) {
-             mes***REMOVED***ges.add("錯誤：上傳的檔案是空的。");
+        if (messages.isEmpty() && file.getSize() > 0) { // 僅當檔案非空且無訊息時提示
+            messages.add("資訊：檔案已處理，但沒有找到任何可操作的資料或所有資料行均不符合處理條件。");
+        } else if (messages.isEmpty() && file.getSize() == 0) {
+             messages.add("錯誤：上傳的檔案是空的。");
         }
-        return mes***REMOVED***ges;
+        return messages;
     }
 
     // --- 模式一：僅匯入新記錄 ---
@@ -110,15 +110,15 @@ public class PredictUploadService {
         return processUploadedExcel(file, this::processRowForImportNew);
     }
 
-    private void processRowForImportNew(Row row, DataFormatter formatter, int rowNumber, List<String> mes***REMOVED***ges) {
-        PredictUploadImportData importData = extractDataForImportNew(row, formatter, rowNumber, mes***REMOVED***ges);
+    private void processRowForImportNew(Row row, DataFormatter formatter, int rowNumber, List<String> messages) {
+        PredictUploadImportData importData = extractDataForImportNew(row, formatter, rowNumber, messages);
 
         if (importData == null) { // extractDataForImportNew 在嚴重錯誤時可能返回 null
             return;
         }
         
         if (importData.getCustomNo() == null || importData.getCustomNo().trim().isEmpty()) {
-            mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行的 CustomNo 為空，已跳過。");
+            messages.add("警告：第 " + rowNumber + " 行的 CustomNo 為空，已跳過。");
             return;
         }
         // 可選：根據業務邏輯添加對 taskType, inMonth 的必要性驗證
@@ -136,21 +136,21 @@ public class PredictUploadService {
         );
 
         if (existingRecordOpt.isPresent()) {
-            mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行的記錄 (CustomNo: " + createDto.getCustomNo() +
+            messages.add("警告：第 " + rowNumber + " 行的記錄 (CustomNo: " + createDto.getCustomNo() +
                          ", TaskType: " + createDto.getTaskType() +
                          ", InMonth: " + createDto.getInMonth() + ") 已存在，已跳過。");
             return;
         }
 
         createPredictUpload(createDto);
-        mes***REMOVED***ges.add("成功：第 " + rowNumber + " 行的記錄 (CustomNo: " + createDto.getCustomNo() + ") 已匯入。");
+        messages.add("成功：第 " + rowNumber + " 行的記錄 (CustomNo: " + createDto.getCustomNo() + ") 已匯入。");
     }
 
-    private PredictUploadImportData extractDataForImportNew(Row row, DataFormatter formatter, int rowNumber, List<String> mes***REMOVED***ges) {
+    private PredictUploadImportData extractDataForImportNew(Row row, DataFormatter formatter, int rowNumber, List<String> messages) {
         String customNo = getCellValue(row, IMPORT_NEW_CUSTOM_NO_COL, formatter);
         String taskType = getCellValue(row, IMPORT_NEW_TASK_TYPE_COL, formatter);
         String inMonth = getCellValue(row, IMPORT_NEW_IN_MONTH_COL, formatter);
-        Integer income = getIntegerCellValue(row, IMPORT_NEW_INCOME_COL, formatter, rowNumber, mes***REMOVED***ges, "Income");
+        Integer income = getIntegerCellValue(row, IMPORT_NEW_INCOME_COL, formatter, rowNumber, messages, "Income");
         
         // 如果 income 解析失敗 (返回 null) 且業務上 income 是可選的或有預設值，這裡直接傳遞 null
         // DEFAULT_INCOME 的應用已移至 processRowForImportNew 中創建 DTO 的地方
@@ -159,25 +159,25 @@ public class PredictUploadService {
 
     // --- 模式二：匯入並更新金額 ---
 
-    @Tran***REMOVED***ctional
+    @Transactional
     public List<String> importAndUpdateIncomeFromExcel(MultipartFile file) throws IOException {
         return processUploadedExcel(file, this::processRowForUpdateIncome);
     }
 
-    private void processRowForUpdateIncome(Row row, DataFormatter formatter, int rowNumber, List<String> mes***REMOVED***ges) {
+    private void processRowForUpdateIncome(Row row, DataFormatter formatter, int rowNumber, List<String> messages) {
         String bankNameExcel = getCellValue(row, UPDATE_BANK_COL, formatter);
         String inMonthExcel = getCellValue(row, UPDATE_RECOGNITION_MONTH_COL, formatter);
         String operationTypeExcel = getCellValue(row, UPDATE_OPERATION_TYPE_COL, formatter);
-        Integer newIncome = getIntegerCellValue(row, UPDATE_AMOUNT_COL, formatter, rowNumber, mes***REMOVED***ges, "金額(未稅)");
+        Integer newIncome = getIntegerCellValue(row, UPDATE_AMOUNT_COL, formatter, rowNumber, messages, "金額(未稅)");
 
         if (isNullOrEmpty(bankNameExcel)) {
-            mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行銀行名稱為空，已跳過。"); return;
+            messages.add("警告：第 " + rowNumber + " 行銀行名稱為空，已跳過。"); return;
         }
         if (isNullOrEmpty(inMonthExcel)) {
-            mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行認列月份為空，已跳過。"); return;
+            messages.add("警告：第 " + rowNumber + " 行認列月份為空，已跳過。"); return;
         }
         if (isNullOrEmpty(operationTypeExcel)) {
-            mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行作業別為空，已跳過。"); return;
+            messages.add("警告：第 " + rowNumber + " 行作業別為空，已跳過。"); return;
         }
         if (newIncome == null) {
             // 訊息已在 getIntegerCellValue 中添加
@@ -186,12 +186,12 @@ public class PredictUploadService {
 
         String customNo = extractCustomNoFromBank(bankNameExcel);
         if (customNo == null) {
-            mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行銀行名稱 (\"" + bankNameExcel + "\") 無法解析出 CustomNo，已跳過。"); return;
+            messages.add("警告：第 " + rowNumber + " 行銀行名稱 (\"" + bankNameExcel + "\") 無法解析出 CustomNo，已跳過。"); return;
         }
 
         String taskTypeDB = mapOperationTypeToTaskType(operationTypeExcel);
         if (taskTypeDB == null) {
-            mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行作業別 (\"" + operationTypeExcel + "\") 無法對應到 TaskType，已跳過。"); return;
+            messages.add("警告：第 " + rowNumber + " 行作業別 (\"" + operationTypeExcel + "\") 無法對應到 TaskType，已跳過。"); return;
         }
 
         Optional<PredictUpload> existingRecordOpt = predictUploadRepository.findByCustomNoAndInMonthAndTaskType(customNo, inMonthExcel, taskTypeDB);
@@ -200,12 +200,12 @@ public class PredictUploadService {
             PredictUpload recordToUpdate = existingRecordOpt.get();
             int oldIncome = recordToUpdate.getIncome();
             recordToUpdate.setIncome(newIncome);
-            predictUploadRepository.***REMOVED***ve(recordToUpdate);
-            mes***REMOVED***ges.add("成功：第 " + rowNumber + " 行 (CustomNo: " + customNo + ", InMonth: " + inMonthExcel + ", TaskType: " + taskTypeDB + ") 金額已從 " + oldIncome + " 更新為 " + newIncome + "。");
+            predictUploadRepository.save(recordToUpdate);
+            messages.add("成功：第 " + rowNumber + " 行 (CustomNo: " + customNo + ", InMonth: " + inMonthExcel + ", TaskType: " + taskTypeDB + ") 金額已從 " + oldIncome + " 更新為 " + newIncome + "。");
         } else {
             UserCreatePredictUpload createDto = new UserCreatePredictUpload(customNo, taskTypeDB, inMonthExcel, newIncome);
             createPredictUpload(createDto);
-            mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行未找到符合條件的記錄 (CustomNo: " + customNo + ", InMonth: " + inMonthExcel + ", TaskType: " + taskTypeDB + ")，未執行更新，新增一份新資料");
+            messages.add("警告：第 " + rowNumber + " 行未找到符合條件的記錄 (CustomNo: " + customNo + ", InMonth: " + inMonthExcel + ", TaskType: " + taskTypeDB + ")，未執行更新，新增一份新資料");
         }
     }
 
@@ -233,10 +233,10 @@ public class PredictUploadService {
         return cell != null ? formatter.formatCellValue(cell).trim() : null;
     }
 
-    private Integer getIntegerCellValue(Row row, int cellIndex, DataFormatter formatter, int rowNumber, List<String> mes***REMOVED***ges, String fieldNameForLog) {
+    private Integer getIntegerCellValue(Row row, int cellIndex, DataFormatter formatter, int rowNumber, List<String> messages, String fieldNameForLog) {
         Cell cell = row.getCell(cellIndex, Row.MissingCellPolicy.RETURN_BLANK_AS_NULL);
         if (cell == null || cell.getCellType() == CellType.BLANK) {
-            mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行的 " + fieldNameForLog + " 欄位為空。");
+            messages.add("警告：第 " + rowNumber + " 行的 " + fieldNameForLog + " 欄位為空。");
             return null;
         }
 
@@ -246,19 +246,19 @@ public class PredictUploadService {
                 if (numericValue == Math.floor(numericValue) && !Double.isInfinite(numericValue)) { // 檢查是否為整數
                     return (int) numericValue;
                 } else {
-                    mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行的 " + fieldNameForLog + " 欄位 (" + numericValue + ") 不是有效的整數，將嘗試四捨五入。");
+                    messages.add("警告：第 " + rowNumber + " 行的 " + fieldNameForLog + " 欄位 (" + numericValue + ") 不是有效的整數，將嘗試四捨五入。");
                     return (int) Math.round(numericValue); // 或其他處理方式
                 }
             } else {
                 String value = formatter.formatCellValue(cell).trim();
                 if (value.isEmpty()) {
-                    mes***REMOVED***ges.add("警告：第 " + rowNumber + " 行的 " + fieldNameForLog + " 欄位為空字串。");
+                    messages.add("警告：第 " + rowNumber + " 行的 " + fieldNameForLog + " 欄位為空字串。");
                     return null;
                 }
                 return Integer.parseInt(value);
             }
         } catch (NumberFormatException e) {
-            mes***REMOVED***ges.add("錯誤：第 " + rowNumber + " 行的 " + fieldNameForLog + " 欄位格式不正確 ('" + formatter.formatCellValue(cell) + "')，無法解析為數字。");
+            messages.add("錯誤：第 " + rowNumber + " 行的 " + fieldNameForLog + " 欄位格式不正確 ('" + formatter.formatCellValue(cell) + "')，無法解析為數字。");
             return null;
         }
     }
@@ -309,7 +309,7 @@ public class PredictUploadService {
         newPredictUpload.setTaskType(createDto.getTaskType());
         newPredictUpload.setInMonth(createDto.getInMonth());
         newPredictUpload.setIncome(createDto.getIncome());
-        return predictUploadRepository.***REMOVED***ve(newPredictUpload);
+        return predictUploadRepository.save(newPredictUpload);
     }
     
     // 保留舊的 createPredictUpload 以兼容，但建議逐步淘汰

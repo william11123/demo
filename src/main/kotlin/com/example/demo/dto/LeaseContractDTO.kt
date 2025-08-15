@@ -13,7 +13,7 @@ data class LeaseContractDTO(
     val compDate: String?,
     val iscomp: String?,
     val prjno: String?,
-    val ***REMOVED***veyear: String?,
+    val saveyear: String?,
     val requestDate: String?,
     val tono: String?,
     val sn: String?

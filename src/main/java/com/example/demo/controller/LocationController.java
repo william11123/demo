@@ -52,19 +52,19 @@ public class LocationController {
 
         Map<String, String> response = new HashMap<>();
         try {
-            String resultMes***REMOVED***ge = checkInService.performCheckIn(request);
-            response.put("mes***REMOVED***ge", resultMes***REMOVED***ge);
+            String resultMessage = checkInService.performCheckIn(request);
+            response.put("message", resultMessage);
 
-            if (resultMes***REMOVED***ge.contains("成功")) {
+            if (resultMessage.contains("成功")) {
                 logger.info("使用者 '{}' 在 '{}' 簽到成功。", request.getUserId(), request.getLocationName());
                 return ResponseEntity.ok(response);
             } else {
-                logger.warn("使用者 '{}' 在 '{}' 簽到失敗：{}", request.getUserId(), request.getLocationName(), resultMes***REMOVED***ge);
+                logger.warn("使用者 '{}' 在 '{}' 簽到失敗：{}", request.getUserId(), request.getLocationName(), resultMessage);
                 return ResponseEntity.badRequest().body(response);
             }
         } catch (Exception e) {
             logger.error("處理簽到請求時發生未預期錯誤", e);
-            response.put("mes***REMOVED***ge", "伺服器內部錯誤，請稍後再試。");
+            response.put("message", "伺服器內部錯誤，請稍後再試。");
             return ResponseEntity.status(500).body(response);
         }
     }

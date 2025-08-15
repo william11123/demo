@@ -4,7 +4,7 @@ import com.example.demo.dto.ProcessQueryDTO;
 import com.example.demo.repository.ProcessQueryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.tran***REMOVED***ction.annotation.Tran***REMOVED***ctional; // 建議對讀取操作也加上事務註解
+import org.springframework.transaction.annotation.Transactional; // 建議對讀取操作也加上事務註解
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class ProcessQueryService {
      * @param inputValue 用於查詢 realsn 或 changesn 的輸入值。
      * @return 符合條件的 ProcessQueryDTO 列表。如果找不到，則返回空列表。
      */
-    @Tran***REMOVED***ctional(readOnly = true) // 標記為唯讀事務，有助於效能最佳化
+    @Transactional(readOnly = true) // 標記為唯讀事務，有助於效能最佳化
     public List<ProcessQueryDTO> getProcessDetails(String inputValue) {
         // 直接呼叫 Repository 的方法
         List<ProcessQueryDTO> results = processQueryRepository.findProcess(inputValue);
