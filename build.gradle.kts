@@ -27,6 +27,7 @@ repositories {
 }
 
 dependencies {
+	implementation("me.paulschwarz:spring-dotenv:4.0.0")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.apache.poi:poi:5.2.5") // 您可以使用最新的穩定版本
